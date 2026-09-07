@@ -1,161 +1,519 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InsightBoard - Iniciar Sesión</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            max-width: 420px;
-            width: 100%;
-        }
-        .login-header {
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-        .login-header i {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-        }
-        .login-header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        .login-header p {
-            opacity: 0.9;
-            margin: 0.5rem 0 0;
-        }
-        .login-body {
-            padding: 2rem;
-        }
-        .form-floating {
-            margin-bottom: 1rem;
-        }
-        .form-floating input {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 1rem 0.75rem;
-        }
-        .form-floating input:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-        .btn-login:hover {
-            background: linear-gradient(135deg, #0b5ed7 0%, #084298 100%);
-            transform: translateY(-1px);
-        }
-        .alert {
-            border-radius: 10px;
-            display: none;
-        }
-        .credentials-hint {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-        }
-        .credentials-hint code {
-            background: #e9ecef;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsightBoard — Iniciar sesión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #eaf5fc;
+    --bg-navy: #dbeefb;
+    --panel: rgba(255, 255, 255, 0.68);
+    --panel-border: rgba(255,255,255,0.9);
+    --cyan: #2ea9e0;
+    --violet: #6fc6ee;
+    --text-main: #163049;
+    --text-muted: #6d859b;
+    --danger: #e0533d;
+    --success: #22c39a;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    height:100%;
+    background: var(--bg-deep);
+    font-family:'Inter', sans-serif;
+    color:var(--text-main);
+    overflow:hidden;
+  }
+
+  #bg-canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+  }
+
+  .stage{
+    position:relative;
+    z-index:2;
+    height:100vh;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    perspective: 1400px;
+  }
+
+  .grid-glow{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(600px 400px at 50% 15%, rgba(255,255,255,0.5), transparent 65%),
+      radial-gradient(500px 500px at 85% 85%, rgba(111,198,238,0.25), transparent 65%);
+    pointer-events:none;
+    z-index:1;
+  }
+
+  /* ---- card ---- */
+  .card{
+    position:relative;
+    width:400px;
+    max-width:90vw;
+    border-radius:20px;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 30px 80px -20px rgba(46,169,224,0.35),
+      0 0 0 1px rgba(255,255,255,0.6) inset;
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+    will-change: transform;
+  }
+
+  .card::before{
+    content:'';
+    position:absolute;
+    inset:-1px;
+    border-radius:20px;
+    padding:1px;
+    background: linear-gradient(135deg, rgba(46,169,224,0.55), transparent 30%, transparent 70%, rgba(111,198,238,0.55));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events:none;
+    opacity:0.7;
+  }
+
+  .card-inner{
+    padding: 34px 34px 28px;
+    transform: translateZ(30px);
+  }
+
+  /* header / logo */
+  .brand{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    margin-bottom:28px;
+  }
+
+  .logo-mark{
+    width:56px;
+    height:56px;
+    border-radius:16px;
+    background: linear-gradient(145deg, var(--cyan), var(--violet));
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:4px;
+    padding:12px 12px 10px;
+    box-shadow: 0 10px 30px -8px rgba(46,169,224,0.5);
+    margin-bottom:14px;
+    transform: translateZ(20px);
+  }
+  .logo-mark span{
+    display:block;
+    width:6px;
+    border-radius:3px;
+    background: rgba(255,255,255,0.95);
+    animation: bar-pulse 2.4s ease-in-out infinite;
+  }
+  .logo-mark span:nth-child(1){ height:10px; animation-delay:0.1s; }
+  .logo-mark span:nth-child(2){ height:20px; animation-delay:0.4s; }
+  .logo-mark span:nth-child(3){ height:15px; animation-delay:0.7s; }
+  .logo-mark span:nth-child(4){ height:26px; animation-delay:1.0s; }
+
+  @keyframes bar-pulse{
+    0%, 100%{ transform: scaleY(1); opacity:0.9; }
+    50%{ transform: scaleY(1.35); opacity:1; }
+  }
+
+  .brand h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    background: linear-gradient(90deg, #163049, #2ea9e0);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .brand p{
+    font-size:13px;
+    color:var(--text-muted);
+    margin-top:4px;
+    letter-spacing:0.01em;
+  }
+
+  /* error */
+  .error{
+    display:none;
+    margin-bottom:16px;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:12.5px;
+    color:#a63b2a;
+    background:rgba(224,83,61,0.1);
+    border:1px solid rgba(224,83,61,0.25);
+  }
+
+  /* fields */
+  .field{
+    position:relative;
+    margin-bottom:16px;
+  }
+  .field input{
+    width:100%;
+    padding:14px 16px 14px 44px;
+    border-radius:12px;
+    border:1px solid rgba(46,169,224,0.18);
+    background: rgba(255,255,255,0.65);
+    color:var(--text-main);
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .field input::placeholder{ color: var(--text-muted); }
+  .field input:focus{
+    border-color: rgba(46,169,224,0.6);
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 0 0 3px rgba(46,169,224,0.14);
+  }
+  .field svg{
+    position:absolute;
+    left:15px;
+    top:50%;
+    transform:translateY(-50%);
+    width:16px;
+    height:16px;
+    stroke: var(--text-muted);
+    pointer-events:none;
+    transition: stroke 0.2s ease;
+  }
+  .field input:focus + svg{ stroke: var(--cyan); }
+
+  .row-meta{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:20px;
+  }
+  .row-meta a{
+    font-size:12.5px;
+    color:var(--text-muted);
+    text-decoration:none;
+    transition: color 0.2s;
+  }
+  .row-meta a:hover{ color: var(--cyan); }
+
+  /* button */
+  .btn-login{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    background-size:200% 100%;
+    background-position: 0% 0%;
+    color:#ffffff;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    box-shadow: 0 14px 30px -10px rgba(46,169,224,0.5);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-position 0.4s ease;
+  }
+  .btn-login:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px -8px rgba(46,169,224,0.65);
+    background-position: 100% 0%;
+  }
+  .btn-login:active{ transform: translateY(0px) scale(0.99); }
+  .btn-login:disabled{ cursor:default; transform:none; opacity:0.75; }
+  .btn-login svg{ width:16px; height:16px; }
+
+  /* divider */
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:22px 0 18px;
+  }
+  .divider::before, .divider::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: rgba(46,169,224,0.18);
+  }
+  .divider span{
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+
+  /* demo creds */
+  .demo{
+    border-radius:12px;
+    border:1px solid rgba(46,169,224,0.2);
+    background: rgba(46,169,224,0.06);
+    padding:12px 14px;
+    font-size:12.5px;
+    color:var(--text-muted);
+  }
+  .demo .demo-head{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color: var(--cyan);
+    font-weight:600;
+    margin-bottom:6px;
+    font-size:12.5px;
+  }
+  .demo code{
+    background: rgba(46,169,224,0.12);
+    padding:1px 6px;
+    border-radius:5px;
+    color:#175a80;
+    font-family: 'Inter', monospace;
+  }
+  .demo-row{ display:flex; justify-content:space-between; margin-top:3px; }
+  .demo-row button{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    cursor:pointer;
+    font-size:11px;
+    text-decoration:underline;
+    padding:0;
+  }
+  .demo-row button:hover{ color:var(--cyan); }
+
+  @media (prefers-reduced-motion: reduce){
+    .logo-mark span{ animation:none; }
+    .card{ transition:none; }
+  }
+</style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="login-header">
-            <i class="bi bi-bar-chart-fill"></i>
-            <h1>InsightBoard</h1>
-            <p>Plataforma de Analítica</p>
+
+<canvas id="bg-canvas"></canvas>
+<div class="grid-glow"></div>
+
+<div class="stage">
+  <div class="card" id="card">
+    <div class="card-inner">
+
+      <div class="brand">
+        <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+        <h1>InsightBoard</h1>
+        <p>Plataforma de Analítica</p>
+      </div>
+
+      <form id="loginForm" autocomplete="off">
+        <div id="loginError" class="error"></div>
+        <div class="field">
+          <input type="email" id="email" placeholder="Correo electrónico" required />
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-11Z"/><path d="m4 6 8 6 8-6"/></svg>
         </div>
-        <div class="login-body">
-            <form id="loginForm">
-                <div class="form-floating">
-                    <input type="email" class="form-control" id="email" placeholder="correo@ejemplo.com" required>
-                    <label for="email">Correo electrónico</label>
-                </div>
-                <div class="form-floating">
-                    <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
-                    <label for="password">Contraseña</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-login">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-                </button>
-            </form>
-            <div id="loginAlert" class="alert mt-3" role="alert"></div>
-            <div class="credentials-hint">
-                <strong>💡 Credenciales de prueba:</strong><br>
-                Usuario: <code>admin</code><br>
-                Contraseña: <code>admin123</code>
-            </div>
+        <div class="field">
+          <input type="password" id="password" placeholder="Contraseña" required />
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
         </div>
+
+        <div class="row-meta"><a href="#">¿Olvidaste tu contraseña?</a></div>
+
+        <button type="submit" id="loginBtn" class="btn-login">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+          Iniciar sesión
+        </button>
+      </form>
+
+      <div class="divider"><span>Acceso de prueba</span></div>
+
+      <div class="demo">
+        <div class="demo-head">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Credenciales de prueba
+        </div>
+        <div class="demo-row"><span>Email: <code>admin@insightboard.com</code></span></div>
+        <div class="demo-row"><span>Contraseña: <code>admin123</code></span><button type="button" id="fillDemo">Autocompletar</button></div>
+      </div>
+
     </div>
+  </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const API_URL = 'http://127.0.0.1:8000/api';
+<script>
+  const API_URL = 'http://127.0.0.1:8000/api';
 
-            document.getElementById('loginForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
+  /* ---------- 3D tilt on the card ---------- */
+  const card = document.getElementById('card');
+  const stage = document.querySelector('.stage');
 
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const alertEl = document.getElementById('loginAlert');
+  stage.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const rotY = (x / rect.width) * 14;
+    const rotX = -(y / rect.height) * 14;
+    card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  });
+  stage.addEventListener('mouseleave', () => {
+    card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+  });
 
-                try {
-                    const response = await fetch(`${API_URL}/auth/login/`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
+  /* ---------- demo autofill ---------- */
+  document.getElementById('fillDemo').addEventListener('click', () => {
+    document.getElementById('email').value = 'admin@insightboard.com';
+    document.getElementById('password').value = 'admin123';
+  });
 
-                    const data = await response.json();
+  /* ---------- login (real API call) ---------- */
+  const btn = document.getElementById('loginBtn');
+  const errorBox = document.getElementById('loginError');
 
-                    if (response.ok) {
-                        localStorage.setItem('token', data.access);
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                        window.location.href = 'index.html';
-                    } else {
-                        alertEl.className = 'alert alert-danger mt-3';
-                        alertEl.textContent = data.detail || 'Credenciales incorrectas';
-                        alertEl.style.display = 'block';
-                    }
-                } catch (error) {
-                    alertEl.className = 'alert alert-danger mt-3';
-                    alertEl.textContent = 'Error de conexión. Asegúrate de que el servidor esté corriendo.';
-                    alertEl.style.display = 'block';
-                }
-            });
-        });
-    </script>
+  function setButton(text, extra) {
+    btn.innerHTML = text;
+    Object.assign(btn.style, extra || {});
+  }
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.style.display = 'block';
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.style.display = 'none';
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    setButton('Verificando...', { opacity: '0.75' });
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_URL}/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.access) {
+        localStorage.setItem('token', data.access);
+        localStorage.setItem('user', JSON.stringify(data.user || {}));
+        setButton('✓ ¡Bienvenido!', { background: 'linear-gradient(90deg, #35e0a1, #4ce0ff)' });
+        setTimeout(() => { window.location.href = 'index.html'; }, 700);
+      } else {
+        setButton('Iniciar sesión', { opacity: '1' });
+        btn.disabled = false;
+        showError(data.detail || data.message || 'Credenciales incorrectas');
+      }
+    } catch (err) {
+      setButton('Iniciar sesión', { opacity: '1' });
+      btn.disabled = false;
+      showError('Error de conexión. Asegúrate de que el servidor esté corriendo.');
+    }
+  });
+
+  /* ---------- animated background: rising data bars + particles ---------- */
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let DPR;
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * DPR;
+    canvas.height = window.innerHeight * DPR;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const barCount = 26;
+  const bars = Array.from({length: barCount}, (_, i) => ({
+    x: (i / barCount) * window.innerWidth + (Math.random()*20-10),
+    w: 18 + Math.random()*22,
+    h: 40 + Math.random()*160,
+    baseH: 0,
+    speed: 0.15 + Math.random()*0.25,
+    phase: Math.random()*Math.PI*2,
+    hueMix: Math.random()
+  }));
+  bars.forEach(b => b.baseH = b.h);
+
+  const particleCount = 60;
+  const particles = Array.from({length: particleCount}, () => ({
+    x: Math.random()*window.innerWidth,
+    y: Math.random()*window.innerHeight,
+    r: 0.6 + Math.random()*1.8,
+    vy: 0.08 + Math.random()*0.22,
+    vx: (Math.random()-0.5)*0.06,
+    alpha: 0.15 + Math.random()*0.35
+  }));
+
+  let t = 0;
+
+  function draw(){
+    t += 0.016;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+    const grad = ctx.createLinearGradient(0,0,0,window.innerHeight);
+    grad.addColorStop(0, '#f3faff');
+    grad.addColorStop(1, '#d9edfb');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
+
+    const baseY = window.innerHeight * 0.92;
+    bars.forEach(b => {
+      const wobble = Math.sin(t*b.speed + b.phase) * 18;
+      const h = Math.max(20, b.baseH + wobble);
+      const grd = ctx.createLinearGradient(0, baseY - h, 0, baseY);
+      const c1 = b.hueMix > 0.5 ? '46,169,224' : '111,198,238';
+      grd.addColorStop(0, `rgba(${c1},0.22)`);
+      grd.addColorStop(1, `rgba(${c1},0.0)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      const r = 6;
+      const x = b.x, y = baseY - h, w = b.w;
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, y+r);
+      ctx.arcTo(x, y, x+r, y, r);
+      ctx.lineTo(x+w-r, y);
+      ctx.arcTo(x+w, y, x+w, y+r, r);
+      ctx.lineTo(x+w, baseY);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    particles.forEach(p => {
+      p.y -= p.vy;
+      p.x += p.vx;
+      if (p.y < -10) { p.y = window.innerHeight + 10; p.x = Math.random()*window.innerWidth; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(46,169,224,${p.alpha})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
 </body>
 </html>

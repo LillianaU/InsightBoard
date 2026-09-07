@@ -63,8 +63,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-DATABASES = {
-    'default': {
+from urllib.parse import urlparse
+
+DATABASES = {}
+_db_url = os.getenv('DATABASE_URL')
+if _db_url:
+    _p = urlparse(_db_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': _p.path[1:],
+        'USER': _p.username,
+        'PASSWORD': _p.password,
+        'HOST': _p.hostname,
+        'PORT': _p.port or 5432,
+    }
+else:
+    DATABASES['default'] = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'insightboard'),
         'USER': os.getenv('POSTGRES_USER', 'postgres'),
@@ -72,7 +86,6 @@ DATABASES = {
         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

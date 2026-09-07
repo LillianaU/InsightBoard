@@ -89,6 +89,90 @@ InsightBoard/
 
 ---
 
+## Ejecutar el proyecto (paso a paso)
+
+Si ya tienes el codigo y solo quieres correrlo, sigue estos pasos **en orden**:
+
+1. **Abre Docker Desktop** y espera a que la ballena indique que esta corriendo
+2. **Levanta los servicios:**
+   ```bash
+   docker-compose up -d
+   docker-compose ps
+   ```
+3. **Aplica migraciones:**
+   ```bash
+   docker-compose exec web uv run python manage.py migrate
+   ```
+4. **Crea un superusuario** (solo la primera vez):
+   ```bash
+   docker-compose exec web uv run python manage.py createsuperuser
+   ```
+5. **Inicia el frontend** (en una segunda terminal):
+   ```bash
+   cd frontend
+   python -m http.server 8080
+   ```
+6. **Abre en el navegador:**
+   - Frontend: http://localhost:8080
+   - API Docs (Swagger): http://127.0.0.1:8000/api/docs/
+   - Admin: http://127.0.0.1:8000/admin/
+
+> Tienes la version extendida con todos los detalles en el [Paso 0 del Cap 8](./c8/README.md#paso-0-ejecutar-el-proyecto-por-primera-vez).
+
+---
+
+## Como se construye (de cero)
+
+El tutorial construye el proyecto paso a paso en cada capitulo:
+
+| Cap | Que se construye |
+|-----|------------------|
+| C2 | Docker Compose, PostgreSQL, Redis |
+| C3 | Proyecto Django, apps, settings, migraciones |
+| C4 | Modelos de datos (DataSource, Event, DailyMetric, SavedReport) |
+| C5 | API REST, serializers, views, Swagger |
+| C6 | Frontend con Bootstrap 5 y Chart.js |
+| C7 | Autenticacion JWT |
+
+---
+
+## Arquitectura del proyecto
+
+### Tipo de arquitectura: **Monolito modular con contenedores**
+
+InsightBoard es un **monolitico (single codebase)** organizado por **apps de Django** (`users`, `analytics`, `core`). No es microservicios: todo el backend corre como un solo proceso, lo que lo hace mas simple de desplegar y mantener. La separacion en apps modulares permite crecer sin reescribir todo.
+
+```
+Browser (Frontend)  --[JWT]-->  Django REST API  --[psycopg2]-->  PostgreSQL
+                                      |
+                                      +--[Celery]-->  Redis  -->  Background tasks
+```
+
+| Capa | Tecnologia | Funcion |
+|------|-----------|---------|
+| Frontend | Bootstrap 5 + Chart.js | Interfaz responsive con graficos |
+| Backend | Django + DRF | API REST y logica del servidor |
+| Base de datos | PostgreSQL | Vistas materializadas, JSON, consultas |
+| Cache / Colas | Redis + Celery | Tareas en segundo plano |
+| Contenedores | Docker Compose | Mismo entorno en cualquier maquina |
+
+### Mejoras futuras
+
+| Mejora | Beneficio |
+|--------|-----------|
+| Separar Celery worker en un servicio propio escalable | Escalar tareas pesadas de forma independiente |
+| Migrar a microservicios (analytics, auth, reports) | Aislamiento y despliegue independiente |
+| Cachear endpoints con Redis (DRF caching) | Respuestas mas rapidas en dashboards |
+| Rate limiting en `/api/events/ingest/` | Proteger la API de abuso |
+| Tests automatizados (pytest + CI) | Evitar regresiones |
+| Paginacion y filtros avanzados en eventos | Manejar volumenes grandes |
+| Desplegar con CDN (Cloudflare) | Entregar el frontend mas rapido |
+| Logging centralizado y monitoreo (Sentry) | Detectar errores en produccion |
+| Autenticacion social (Google/GitHub OAuth) | Login mas comodo |
+| Modo oscuro y tema personalizable | Mejor experiencia de usuario |
+
+---
+
 ## Credenciales de prueba
 
 | Usuario | Contrasena | Descripcion |

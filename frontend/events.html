@@ -7,6 +7,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        .step-block { border: 1px solid #e9ecef; border-radius: 12px; padding: 1rem; background: #fafbfc; }
+        .step-title { font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .step-badge { background: linear-gradient(135deg, #0d6efd, #764ba2); color: #fff; border-radius: 20px; padding: 0.15rem 0.65rem; font-size: 0.75rem; font-weight: 700; }
+        .payload-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+        .payload-row { display: flex; gap: 0.5rem; align-items: center; }
+        .payload-row input { flex: 1; }
+        .payload-row .btn-remove { flex: 0 0 auto; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -54,24 +63,53 @@
                     </div>
                     <div class="card-body">
                         <form id="eventForm">
-                            <div class="mb-3">
-                                <label for="eventSource" class="form-label">Fuente de Datos</label>
+                            <div class="step-block mb-3">
+                                <div class="step-title">
+                                    <span class="step-badge">Paso 1</span> Fuente de Datos
+                                </div>
                                 <select class="form-select" id="eventSource" required>
-                                    <option value="">Selecciona una fuente...</option>
+                                    <option value="">Selecciona de dónde viene el dato...</option>
                                     <option value="Tienda Online">Tienda Online</option>
                                     <option value="App Móvil">App Móvil</option>
                                     <option value="Sitio Web">Sitio Web</option>
                                 </select>
+                                <div class="form-text">¿Desde qué canal ocurrió el evento?</div>
                             </div>
-                            <div class="mb-3">
-                                <label for="eventType" class="form-label">Tipo de Evento</label>
+
+                            <div class="step-block mb-3">
+                                <div class="step-title">
+                                    <span class="step-badge">Paso 2</span> Tipo de Evento
+                                </div>
                                 <input type="text" class="form-control" id="eventType" placeholder="Ej: compra, visita, click" required>
+                                <div class="form-text">¿Qué acción hizo el usuario?</div>
                             </div>
-                            <div class="mb-3">
-                                <label for="eventPayload" class="form-label">Datos Extra (JSON)</label>
-                                <textarea class="form-control" id="eventPayload" rows="3" placeholder='{"producto": "camisa", "precio": 25}'></textarea>
-                                <div class="form-text">Datos adicionales en formato JSON (opcional)</div>
+
+                            <div class="step-block mb-4">
+                                <div class="step-title">
+                                    <span class="step-badge">Paso 3</span> Datos extra del evento <span class="text-muted small">(opcional)</span>
+                                </div>
+
+                                <label class="form-label mt-2">¿Qué evento quieres registrar?</label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" onclick="loadTemplate('compra')">🛒 Compra</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" onclick="loadTemplate('visita')">👁 Visita</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" onclick="loadTemplate('click')">🖱 Click</button>
+                                </div>
+                                <div class="form-text mb-2">Elige un ejemplo para guiarte. Luego añade, edita o borra los datos.</div>
+
+                                <label class="form-label mt-2">O elige un producto de la tienda:</label>
+                                <select class="form-select mb-2" id="productSelect" onchange="selectProduct(this)">
+                                    <option value="">— Selecciona un producto —</option>
+                                </select>
+                                <div class="form-text mb-2">Al elegir un producto se rellenan solos sus datos.</div>
+
+                                <div id="payloadRows" class="payload-rows"></div>
+                                <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="addPayloadRow()">
+                                    <i class="bi bi-plus-lg me-1"></i>Añadir dato
+                                </button>
+                                <div class="form-text mt-2">Cada dato tiene un <b>nombre</b> y un <b>valor</b>. Ejemplo: nombre = <code>producto</code>, valor = <code>camisa</code>.</div>
                             </div>
+
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-save me-2"></i>Guardar Evento
                             </button>
@@ -129,13 +167,7 @@
 
             const source = document.getElementById('eventSource').value;
             const eventType = document.getElementById('eventType').value;
-            let payload = {};
-            try {
-                const payloadText = document.getElementById('eventPayload').value;
-                if (payloadText) payload = JSON.parse(payloadText);
-            } catch (err) {
-                payload = { raw: document.getElementById('eventPayload').value };
-            }
+            const payload = buildPayload();
 
             try {
                 await AUTH.apiPost('/events/ingest/', { source, event_type: eventType, payload });
@@ -146,6 +178,78 @@
                 showAlert('Error: ' + error.message, 'danger');
             }
         });
+
+        const TEMPLATES = {
+            compra: { eventType: 'compra', fields: [['producto', 'camisa'], ['precio', '25'], ['cantidad', '1']] },
+            visita: { eventType: 'visita', fields: [['pagina', 'inicio'], ['dispositivo', 'movil']] },
+            click:  { eventType: 'click',  fields: [['boton', 'comprar'], ['seccion', 'promociones']] },
+        };
+
+        const PRODUCTS = [
+            ['camisa', 20], ['pantalon', 35], ['zapatos', 55], ['gorra', 15], ['chaqueta', 70],
+            ['vestido', 45], ['shorts', 25], ['bufanda', 12], ['sudadera', 40], ['botas', 65],
+            ['blusa', 28], ['jeans', 50], ['falda', 30], ['abrigo', 90], ['camiseta', 18],
+        ];
+
+        (function populateProducts() {
+            const sel = document.getElementById('productSelect');
+            PRODUCTS.forEach(([name, price]) => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = `${name} — $${price}`;
+                sel.appendChild(opt);
+            });
+        })();
+
+        function selectProduct(select) {
+            const name = select.value;
+            if (!name) return;
+            const product = PRODUCTS.find(p => p[0] === name);
+            if (!product) return;
+            document.getElementById('eventType').value = 'compra';
+            const rows = document.getElementById('payloadRows');
+            rows.innerHTML = '';
+            addPayloadRow('producto', product[0]);
+            addPayloadRow('precio', String(product[1]));
+            addPayloadRow('cantidad', '1');
+        }
+
+        function loadTemplate(type) {
+            const t = TEMPLATES[type];
+            if (!t) return;
+            document.getElementById('eventType').value = t.eventType;
+            const rows = document.getElementById('payloadRows');
+            rows.innerHTML = '';
+            t.fields.forEach(([name, value]) => addPayloadRow(name, value));
+        }
+
+        function addPayloadRow(name = '', value = '') {
+            const row = document.createElement('div');
+            row.className = 'payload-row';
+            row.innerHTML = `
+                <input type="text" class="form-control" placeholder="Nombre del dato" value="${escapeAttr(name)}">
+                <input type="text" class="form-control" placeholder="Valor" value="${escapeAttr(value)}">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove" onclick="this.closest('.payload-row').remove()">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            document.getElementById('payloadRows').appendChild(row);
+        }
+
+        function escapeAttr(str) {
+            return String(str).replace(/"/g, '&quot;');
+        }
+
+        function buildPayload() {
+            const payload = {};
+            document.querySelectorAll('#payloadRows .payload-row').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const name = inputs[0].value.trim();
+                const value = inputs[1].value.trim();
+                if (name) payload[name] = value;
+            });
+            return payload;
+        }
 
         function showAlert(message, type) {
             const alert = document.getElementById('formAlert');
@@ -179,6 +283,7 @@
             }
         }
 
+        addPayloadRow();
         loadEvents();
     </script>
 </body>

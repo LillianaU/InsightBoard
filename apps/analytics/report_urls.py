@@ -7,6 +7,4 @@ report_urlpatterns = [
     path('<int:pk>/', views.SavedReportDetailView.as_view(), name='savedreport-detail'),
 ]
 
-urlpatterns = [
-    path('reports/', include(report_urlpatterns)),
-]
+urlpatterns = report_urlpatterns

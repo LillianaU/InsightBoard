@@ -11,6 +11,66 @@ Vamos a hacer las **pruebas finales** de todo el proyecto y aprender a **despleg
 
 ---
 
+## Paso 0: Ejecutar el proyecto por primera vez
+
+Si tienes el codigo de InsightBoard (clonado o descargado) y quieres correrlo, sigue estos pasos **en orden**.
+
+### 0.1 Arranca Docker Desktop
+
+Abre **Docker Desktop** y espera a que el icono de la ballena en la barra de tareas indique que esta corriendo.
+
+### 0.2 Levanta los servicios con Docker Compose
+
+Desde la carpeta raiz del proyecto:
+
+```bash
+docker-compose up -d
+```
+
+Esto enciende los 4 servicios: `web`, `db`, `redis` y `worker`. Verifica que todos esten `Up`:
+
+```bash
+docker-compose ps
+```
+
+### 0.3 Aplica las migraciones de la base de datos
+
+```bash
+docker-compose exec web uv run python manage.py migrate
+```
+
+### 0.4 Crea un superusuario (solo la primera vez)
+
+```bash
+docker-compose exec web uv run python manage.py createsuperuser
+```
+
+Usa el email y la contrasena que quieras (o las credenciales de prueba: `admin@insightboard.com` / `admin123`).
+
+### 0.5 Carga datos de ejemplo (opcional)
+
+Para que el dashboard muestre estadisticas, registra algunos eventos (ver el **Paso 2** mas abajo).
+
+### 0.6 Inicia el frontend (segunda terminal)
+
+Abre una **nueva terminal** y ejecuta:
+
+```bash
+cd frontend
+python -m http.server 8080
+```
+
+### 0.7 Abre el proyecto en el navegador
+
+| Pagina | URL |
+|--------|-----|
+| Frontend (login) | http://localhost:8080/login.html |
+| Frontend (dashboard) | http://localhost:8080 |
+| API Docs (Swagger) | http://127.0.0.1:8000/api/docs/ |
+| Admin | http://127.0.0.1:8000/admin/ |
+
+---
+
 ## Paso 1: Prueba completa del backend
 
 Asegurate de que Docker esta corriendo:
@@ -132,38 +192,79 @@ Marca cada item con una X cuando lo verifiques:
 
 ## Paso 5: Desplegar en la nube
 
+> **Requisito previo:** el codigo debe estar en un repositorio de GitHub.
+> ```bash
+> git init
+> git add .
+> git commit -m "Deploy InsightBoard"
+> git branch -M main
+> git remote add origin https://github.com/TU_USUARIO/InsightBoard.git
+> git push -u origin main
+> ```
+
+> **Nota sobre el puerto:** el proyecto ya esta preparado para produccion. El `Dockerfile`
+> arranca con `gunicorn` en el puerto `$PORT` (que inyecta el proveedor) y corre las migraciones solo:
+> ```dockerfile
+> CMD uv run python manage.py migrate && uv run gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000}
+> ```
+> Y los settings aceptan `DATABASE_URL` ademas de las variables `POSTGRES_*`.
+
 ### Opcion 1: Railway (recomendada para principiantes)
 
-1. Ve a **https://railway.app**
-2. Crea una cuenta con GitHub
-3. Haz clic en "New Project" > "Deploy from GitHub repo"
-4. Selecciona tu repositorio de InsightBoard
-5. Railway detectara el `Dockerfile` automaticamente
-6. Agrega las variables de entorno en la pestana "Variables":
-
-```
-DJANGO_SECRET_KEY=tu-clave-secreta-aqui
-POSTGRES_DB=insightboard
-POSTGRES_USER=tu-usuario
-POSTGRES_PASSWORD=tu-contrasena
-POSTGRES_HOST=tu-host-de-railway
-POSTGRES_PORT=5432
-REDIS_URL=tu-url-de-redis
-ALLOWED_HOSTS=tu-app.railway.app
-DEBUG=False
-```
-
-7. Railway desplegara automaticamente
+1. Ve a **https://railway.app** e inicia sesion con GitHub.
+2. **New Project** > **Deploy from GitHub repo** > selecciona `InsightBoard`.
+3. Railway detecta el `Dockerfile` automaticamente y empieza a construir.
+4. Agrega los servicios de datos:
+   - **New** > **Database** > **PostgreSQL**
+   - **New** > **Database** > **Redis** (para Celery)
+5. En el servicio web, pestana **Variables**, agrega:
+   ```
+   DJANGO_SECRET_KEY=clave-secreta-larga
+   DEBUG=False
+   ALLOWED_HOSTS=tu-app.up.railway.app
+   ```
+   Y las credenciales de la base de datos (abre el plugin PostgreSQL > Variables y copia al servicio web):
+   ```
+   POSTGRES_DB=...
+   POSTGRES_USER=...
+   POSTGRES_PASSWORD=...
+   POSTGRES_HOST=...
+   POSTGRES_PORT=5432
+   REDIS_URL=redis://<host-redis>:6379/0
+   ```
+6. Railway ejecuta `migrate` y `gunicorn` solo (gracias al `Dockerfile`).
+7. Entra al **Shell** del servicio web y crea el superusuario:
+   ```bash
+   uv run python manage.py createsuperuser
+   ```
+8. Railway te da una URL publica. Listo.
 
 ### Opcion 2: Render
 
-1. Ve a **https://render.com**
-2. Crea un "Web Service" desde tu repositorio de GitHub
-3. Configura:
-   - **Build Command:** `docker-compose build`
-   - **Start Command:** `docker-compose up`
-4. Agrega las variables de entorno
-5. Haz clic en "Create Web Service"
+1. Ve a **https://render.com** > **New** > **Web Service**.
+2. Conecta tu repositorio de GitHub y selecciona `InsightBoard`.
+3. Render detecta el `Dockerfile`. Region: la mas cercana.
+4. Agrega los servicios de datos:
+   - **New** > **PostgreSQL** (copia su **Internal Database URL**)
+   - **New** > **Redis** (copia su **Internal Connection String**)
+5. En el Web Service, pestana **Environment**, agrega:
+   ```
+   DJANGO_SECRET_KEY=clave-secreta-larga
+   DEBUG=False
+   ALLOWED_HOSTS=insightboard.onrender.com
+   DATABASE_URL=postgres://...   (del paso 4)
+   REDIS_URL=redis://...         (del paso 4)
+   ```
+6. **Start Command** (opcional, el `Dockerfile` ya lo hace, pero asi es explicito):
+   ```bash
+   uv run python manage.py migrate && uv run gunicorn config.wsgi --bind 0.0.0.0:$PORT
+   ```
+7. Clic en **Create Web Service**. Render construye y despliega.
+8. Crea el superusuario desde la pestana **Shell**:
+   ```bash
+   uv run python manage.py createsuperuser
+   ```
+9. URL publica: `https://insightboard.onrender.com` (Swagger en `/api/docs/`).
 
 ---
 

@@ -6,7 +6,7 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Event, DataSource, SavedReport, DailyMetric
 from .serializers import EventSerializer, DataSourceSerializer, EventIngestSerializer, SavedReportSerializer
 import csv
@@ -22,7 +22,7 @@ class DataSourceListCreateView(generics.ListCreateAPIView):
 class EventIngestView(generics.CreateAPIView):
     serializer_class = EventIngestSerializer
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
