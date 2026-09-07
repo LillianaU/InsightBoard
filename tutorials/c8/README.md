@@ -318,6 +318,53 @@ Verifica que `CORS_ALLOW_ALL_ORIGINS = True` en `config/settings/base.py`.
 
 Vuelve a hacer login para obtener un token nuevo.
 
+### "No open ports detected" (Render)
+
+Render busca un servicio escuchando en el puerto `$PORT` (10000), pero el `Dockerfile`
+antiguo usaba `runserver 0.0.0.0:8000`. La solucion es arrancar con **Gunicorn en `$PORT`**
+(ya esta corregido en el `Dockerfile`):
+
+```dockerfile
+CMD uv run python manage.py migrate && uv run gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000}
+```
+
+Si aun falla, verifica en los **logs** del servicio que la app arranco y mira en que puerto escucha.
+
+### "Solo veo la API, el frontend no carga" (Render/Railway)
+
+Django no sirve la carpeta `frontend/` por defecto. En produccion debes configurar que Django
+entregue las paginas del frontend (servir `frontend/` con las vistas staticas) o alojar el
+frontend en un servicio estatico aparte.
+
+### "El login da 'Tipo de medio application/json incompatible'"
+
+El endpoint `/api/events/ingest/` debe aceptar `application/json`. Ya esta corregido en
+`apps/analytics/views.py` agregando `JSONParser` a `parser_classes`.
+
+### "Error 500 al guardar evento (created_by)"
+
+`DataSource.created_by` era obligatorio (`NOT NULL`) pero el ingest es anonimo. Se cambio a
+opcional en el modelo y se creo la migracion `0003_alter_datasource_created_by`.
+
+### "El contenedor no inicia en Windows (falla al instalar celery)"
+
+En Windows, montar todo el proyecto (`.:/app`) oculta el `.venv` de la imagen y `uv` intenta
+recrearlo sobre el filesystem de Windows y falla. La solucion es guardar el `.venv` en un
+volumen nombrado (ya corregido en `docker-compose.yml`):
+
+```yaml
+volumes:
+  - .:/app
+  - insightboard_venv:/app/.venv
+```
+
+Y si el volumen quedo "contaminado" con un venv incompleto, borralo y recrea:
+```bash
+docker-compose down
+docker volume rm insightboard_insightboard_venv
+docker-compose up -d
+```
+
 ---
 
 ## Resumen del curso
