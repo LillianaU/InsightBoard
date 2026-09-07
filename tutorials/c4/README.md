@@ -1,31 +1,30 @@
-# C4 - Armar las piezas: Modelos de base de datos
+# C4 - Modelos de base de datos
 
-> **Edad recomendada:** 10-11 años  
 > **Tiempo estimado:** 30 minutos  
 > **Dificultad:** ⭐ ⭐ ⭐
 
 ---
 
-## ¿Qué vamos a hacer?
+## ¿Que vamos a hacer?
 
-Ya tenemos el proyecto Django corriendo. Ahora vamos a **entender las piezas que acabamos de crear** y por qué las armamos así.
-
----
-
-## ¿Qué es un modelo?
-
-Un **modelo** es como la **instrucción de armado de LEGO**. Nos dice:
-- ¿Qué piezas necesito?
-- ¿Cómo se conectan entre sí?
-- ¿Qué forma tiene cada pieza?
-
-En programación, un modelo es un archivo que describe **cómo se guarda la información** en la base de datos.
+En este capitulo vamos a **entender** los 4 modelos que creamos en el capitulo anterior. No vamos a crear nada nuevo, solo a comprender como funciona por dentro.
 
 ---
 
-## Nuestros 4 modelos principales
+## ¿Que es un modelo?
 
-### 🧱 1. DataSource (Fuente de Datos)
+Un **modelo** es como la **instruccion de armado de LEGO**. Nos dice:
+- Que piezas necesito
+- Como se conectan entre si
+- Que forma tiene cada pieza
+
+En programacion, un modelo describe **como se guarda la informacion** en la base de datos.
+
+---
+
+## Nuestros 4 modelos
+
+### 1. DataSource (Fuente de Datos)
 
 ```python
 class DataSource(models.Model):
@@ -35,18 +34,18 @@ class DataSource(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 ```
 
-**Analogía:** Es como una **caja de almacenamiento con etiqueta**.
+**Analogia:** Es como una **caja de almacenamiento con etiqueta**.
 
-| Pieza LEGO | Campo | Ejemplo |
-|-----------|-------|---------|
-| Nombre en la etiqueta | `name` | "Ventas de septiembre" |
-| Nota adhesiva | `description` | "Datos de la tienda online" |
-| Dueño de la caja | `created_by` | El usuario que la creó |
-| Fecha de compra | `created_at` | Cuándo se creó |
+| Campo | Tipo | Ejemplo | Que guarda |
+|-------|------|---------|-----------|
+| `name` | CharField | "Tienda Online" | Nombre de la fuente |
+| `description` | TextField | "Ventas del sitio web" | Descripcion opcional |
+| `created_by` | ForeignKey -> User | admin@insightboard.com | Quien la creo |
+| `created_at` | DateTimeField | 2026-09-06 14:30 | Cuando se creo |
 
 ---
 
-### 🧱 2. Event (Evento)
+### 2. Event (Evento)
 
 ```python
 class Event(models.Model):
@@ -57,21 +56,29 @@ class Event(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 ```
 
-**Analogía:** Es como una **ficha individual** que registra algo que pasó.
+**Analogia:** Es como una **ficha individual** que registra algo que paso.
 
-| Pieza LEGO | Campo | Ejemplo |
-|-----------|-------|---------|
-| ¿De qué caja viene? | `source` | "Ventas de septiembre" |
-| Tipo de evento | `event_type` | "compra", "visita", "click" |
-| Datos extra | `payload` | `{"producto": "camisa", "precio": 25}` |
-| Cuándo pasó | `created_at` | "2026-09-06 14:30" |
-| Quién lo hizo | `user` | Usuario #123 (opcional) |
+| Campo | Tipo | Ejemplo | Que guarda |
+|-------|------|---------|-----------|
+| `source` | ForeignKey -> DataSource | "Tienda Online" | De que fuente viene |
+| `event_type` | CharField | "compra", "visita" | Tipo de evento |
+| `payload` | JSONField | `{"producto": "camisa", "precio": 25}` | Datos extra flexibles |
+| `created_at` | DateTimeField | 2026-09-06 14:30 | Cuando paso |
+| `user` | ForeignKey -> User | admin@insightboard.com | Quien lo hizo (opcional) |
 
-**¿Qué es `payload`?** Es una **cajita mágica** donde guardamos cualquier información extra. Piensa en ella como una **mochila** que puede llevar lo que quieras.
+**¿Que es `payload`?** Es una **cajita magica** donde guardamos cualquier informacion extra. Puede ser un numero, texto, lista o diccionario.
+
+Ejemplos de payload:
+
+```json
+{"producto": "camisa", "precio": 25, "talla": "M"}
+{"pagina": "/checkout", "duracion_segundos": 45}
+{"temperatura": 22.5, "ciudad": "CDMX"}
+```
 
 ---
 
-### 🧱 3. DailyMetric (Métrica Diaria)
+### 3. DailyMetric (Metrica Diaria)
 
 ```python
 class DailyMetric(models.Model):
@@ -81,20 +88,20 @@ class DailyMetric(models.Model):
     unique_users = models.BigIntegerField()
 ```
 
-**Analogía:** Es como un **reporte pre-armado** que dice "en este día pasó X".
+**Analogia:** Es como un **reporte pre-armado** que dice "en este dia paso X".
 
-| Pieza LEGO | Campo | Ejemplo |
-|-----------|-------|---------|
-| Fecha del reporte | `date` | "2026-09-06" |
-| Tipo de evento | `event_type` | "compra" |
-| Cuántos eventos | `count` | 42 |
-| Cuántas personas únicas | `unique_users` | 15 |
+| Campo | Tipo | Ejemplo | Que guarda |
+|-------|------|---------|-----------|
+| `date` | DateField | 2026-09-06 | Dia del reporte |
+| `event_type` | CharField | "compra" | Tipo de evento |
+| `count` | BigIntegerField | 42 | Cuantos eventos hubo |
+| `unique_users` | BigIntegerField | 15 | Cuantos usuarios distintos |
 
-**¿Por qué existe?** Para que los gráficos se vean rápidos sin tener que contar todos los eventos de nuevo cada vez.
+**¿Por que existe?** Para que los graficos se vean rapido sin tener que contar todos los eventos de nuevo cada vez.
 
 ---
 
-### 🧱 4. SavedReport (Reporte Guardado)
+### 4. SavedReport (Reporte Guardado)
 
 ```python
 class SavedReport(models.Model):
@@ -104,18 +111,18 @@ class SavedReport(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 ```
 
-**Analogía:** Es como **guardar una partida en un videojuego**.
+**Analogia:** Es como **guardar una partida en un videojuego**.
 
-| Pieza LEGO | Campo | Ejemplo |
-|-----------|-------|---------|
-| Quién lo guardó | `user` | "maria@gmail.com" |
-| Nombre del reporte | `name` | "Ventas de septiembre" |
-| Configuración | `config` | `{"tipo": "barras", "filtros": {...}}` |
-| Cuándo lo guardó | `created_at` | "2026-09-06" |
+| Campo | Tipo | Ejemplo | Que guarda |
+|-------|------|---------|-----------|
+| `user` | ForeignKey -> User | admin@insightboard.com | Quien lo guardo |
+| `name` | CharField | "Ventas semanales" | Nombre del reporte |
+| `config` | JSONField | `{"tipo": "barras", "dias": 7}` | Configuracion del reporte |
+| `created_at` | DateTimeField | 2026-09-06 | Cuando lo guardo |
 
 ---
 
-## ¿Cómo se conectan los LEGOs?
+## Como se conectan los modelos
 
 ```
 DataSource (1) ────┐
@@ -124,68 +131,74 @@ User (1) ──────────┘
                    ├─── Event (muchos)
                    ├─── DataSource (muchos)
                    └─── SavedReport (muchos)
+
+DailyMetric (independiente)
 ```
 
 **Regla de oro:** Una `DataSource` puede tener **muchos** `Event`, pero un `Event` pertenece a **una sola** `DataSource`.
 
-Esto se llama **relación uno a muchos** (ForeignKey).
+Esto se llama **relacion uno a muchos** (ForeignKey).
 
 ---
 
-## ¿Qué es un `JSONField`?
+## Que es un JSONField
 
-Imagina que tienes una **cajita mágica** donde puedes guardar cualquier cosa:
-- Un número: `42`
+Imagina que tienes una **cajita magica** donde puedes guardar cualquier cosa:
+
+- Un numero: `42`
 - Un texto: `"camisa azul"`
-- Una lista: `["rojo", "azul", "verde"]`
+- Una lista: `["rojo", "azul", "verde"`
 - Un diccionario: `{"talla": "M", "color": "azul"}`
 
-Esa cajita mágica es el `JSONField`. Nos sirve para guardar datos flexibles sin tener que crear campos nuevos cada vez.
+Esa cajita magica es el `JSONField`. Nos sirve para guardar datos flexibles sin crear campos nuevos cada vez.
 
 ---
 
-## ¿Qué son los índices?
+## Que son los indices
 
-Los **índices** son como el **índice de un libro**. Si buscas "dragones" en un libro de 500 páginas, no lees página por página: vas al índice y saltas directo a la página 234.
+Los **indices** son como el **indice de un libro**. Si buscas "dragones" en un libro de 500 paginas, no lees pagina por pagina: vas al indice y saltas directo a la pagina 234.
 
-En programación:
+En el codigo:
+
 ```python
 indexes = [models.Index(fields=['event_type', 'created_at'])]
 ```
 
-Esto le dice a la base de datos: "Cuando busquen eventos por tipo y fecha, no busques en toda la caja, ve directo a donde están guardados".
+Esto le dice a la base de datos: "Cuando busquen eventos por tipo y fecha, no busques en toda la caja, ve directo a donde estan guardados".
 
 ---
 
-## Ejercicio práctico
+## Ejercicio practico
 
-1. Abre el panel de admin: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
-2. Crea una `DataSource` llamada "Tienda Online"
-3. Crea un `Event` asociado a esa fuente:
+1. Abre el panel de admin: http://127.0.0.1:8000/admin/
+2. Ingresa con `admin@insightboard.com` / `admin123`
+3. Crea una `DataSource` llamada "Tienda Online"
+4. Crea un `Event` asociado a esa fuente:
    - `event_type`: "compra"
    - `payload`: `{"producto": "camisa", "precio": 25}`
-4. Guarda y observa cómo se conectan
+5. Guarda y observa como se conectan
+
+### Verificacion
+
+- ¿Puedes ver la DataSource en la lista? = Funciona
+- ¿Puedes ver el Event asociado? = Funciona
+- ¿El Event muestra la fuente correcta? = Funciona
 
 ---
 
-## ¿Qué sigue?
+## Resumen del paso
 
-Ahora que entiendes las piezas, puedes empezar a:
-- Crear endpoints para recibir datos
-- Hacer gráficos con D3.js
-- Exportar reportes
-
-En los siguientes capítulos aprenderás a construir la API y el frontend.
+| Concepto | Que es | Ejemplo |
+|----------|-------|---------|
+| Modelo | Instruccion de armado | Como armar un LEGO |
+| DataSource | Caja de datos | "Tienda Online" |
+| Event | Ficha individual | "Usuario compro camisa" |
+| DailyMetric | Reporte del dia | "Hoy 42 ventas" |
+| SavedReport | Partida guardada | "Grafico de ventas" |
+| ForeignKey | Relacion uno a muchos | 1 DataSource -> muchos Events |
+| JSONField | Cajita magica | Guarda cualquier dato |
+| Index | Indice de libro | Busqueda rapida |
 
 ---
 
-## Resumen del capítulo C4
-
-✅ Entendimos qué son los modelos (instrucciones LEGO)  
-✅ Vimos los 4 modelos de InsightBoard  
-✅ Entendimos las relaciones entre modelos  
-✅ Aprendimos qué es JSONField  
-✅ Descubrimos para qué sirven los índices  
-✅ Creamos datos de prueba en el panel de admin  
-
-**¡Ahora eres un arquitecto de datos en miniatura!** 🏗️
+**¿Entendiste los modelos? Sigue con el [Capitulo 5: API REST con DRF](../c5/README.md)**

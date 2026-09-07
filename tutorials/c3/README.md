@@ -1,26 +1,30 @@
-# C3 - Crear el proyecto Django
+# C3 - Crear proyecto Django
 
-> **Edad recomendada:** 10-11 años  
 > **Tiempo estimado:** 35 minutos  
 > **Dificultad:** ⭐ ⭐ ⭐ ⭐
 
 ---
 
-## ¿Qué vamos a hacer?
+## ¿Que vamos a hacer?
 
-Ahora vamos a **crear el proyecto Django** desde cero. Usaremos comandos mágicos de Django para generar la estructura base, luego crearemos las 3 apps y configuraremos todo para que funcione con Docker.
+Vamos a crear el proyecto Django desde cero, configurar las apps, los settings, las URLs y levantar el servidor.
+
+### Al final de este capitulo tendras:
+- Un proyecto Django funcionando
+- 3 apps configuradas (users, analytics, core)
+- La base de datos conectada
+- El panel de admin funcionando
+- El servidor web corriendo
 
 ---
 
-## Paso 1: Verificar que Docker está corriendo
-
-Antes de empezar, asegúrate de que las cajitas estén encendidas:
+## Paso 1: Verificar que Docker esta corriendo
 
 ```bash
 docker-compose ps
 ```
 
-Debes ver los 4 servicios en estado `Up`. Si no, enciéndelos:
+Debes ver los 4 servicios en `Up`. Si no:
 
 ```bash
 docker-compose up -d
@@ -30,19 +34,17 @@ docker-compose up -d
 
 ## Paso 2: Crear el proyecto Django
 
-Django tiene un comando mágico que crea toda la estructura base del proyecto.
-
-En la terminal, ejecuta:
+Ejecuta este comando en la terminal:
 
 ```bash
 uv run django-admin startproject config .
 ```
 
-**¿Qué hace este comando?**
-- `startproject config` = "Crea un proyecto llamado `config`"
-- El `.` al final = "En la carpeta actual"
+**¿Que hace?**
+- `startproject config` = Crea un proyecto llamado "config"
+- El `.` = En la carpeta actual
 
-Esto crea estas carpetas y archivos automáticamente:
+**Estructura que se crea:**
 
 ```
 InsightBoard/
@@ -55,368 +57,101 @@ InsightBoard/
 └── manage.py
 ```
 
----
-
-## Paso 3: Ver el `manage.py`
-
-`manage.py` es como el **control remoto** de tu proyecto. Con él puedes hacer todo.
-
-Intenta pedirle ayuda:
+### Verificar
 
 ```bash
-uv run python manage.py help
+dir config
 ```
 
-Verás una lista gigante de comandos. Los que más usaremos son:
-- `migrate` - Crear tablas en la base de datos
-- `createsuperuser` - Crear el administrador
-- `runserver` - Encender el servidor web
+Debes ver los archivos: `__init__.py`, `asgi.py`, `settings.py`, `urls.py`, `wsgi.py`
 
 ---
 
-## Paso 4: Crear las 3 apps
+## Paso 3: Crear las 3 apps
 
-Una **app** en Django es como una **carpeta de herramientas especializadas**.
+Una **app** en Django es una pieza especializada. Vamos a crear 3:
 
-Vamos a crear 3 apps:
-
-### App 1: `users` (usuarios)
+### App 1: users (usuarios)
 
 ```bash
 uv run python manage.py startapp users apps/users
 ```
 
-Esto crea la carpeta `apps/users/` con todos los archivos de la app.
-
-### App 2: `analytics` (análisis)
+### App 2: analytics (analitica)
 
 ```bash
 uv run python manage.py startapp analytics apps/analytics
 ```
 
-### App 3: `core` (utilidades)
+### App 3: core (utilidades)
 
 ```bash
 uv run python manage.py startapp core apps/core
 ```
 
+### Verificar
+
+```bash
+dir apps
+```
+
+Debes ver 3 carpetas: `analytics/`, `core/`, `users/`
+
 ---
 
-## Paso 5: Crear carpetas extra
+## Paso 4: Crear carpetas de migraciones
 
-Algunas apps necesitan carpetas adicionales. Crea estas carpetas vacías:
-
-**Para `analytics`:**
 ```bash
 mkdir apps\analytics\migrations
-```
-
-**Para `users`:**
-```bash
 mkdir apps\users\migrations
+mkdir apps\core\migrations
 ```
 
-**Para `core`:**
-```bash
-mkdir core\migrations
-```
-
-También crea archivos `__init__.py` vacíos dentro de cada `migrations`:
+Crear archivos `__init__.py` vacios:
 
 ```bash
 type nul > apps\analytics\migrations\__init__.py
 type nul > apps\users\migrations\__init__.py
-type nul > core\migrations\__init__.py
+type nul > apps\core\migrations\__init__.py
 ```
+
+### Verificar
+
+```bash
+dir apps\analytics\migrations
+```
+
+Debes ver `__init__.py`
 
 ---
 
-## Paso 6: Configurar `settings/base.py`
+## Paso 5: Crear la estructura de settings
 
-Ahora vamos a configurar el proyecto. Abre el archivo `config/settings/base.py` en VS Code.
+Django genera un solo `settings.py`, pero nosotros queremos separar en base y desarrollo.
 
-### 6.1. Configurar la base de datos
+Primero crea la carpeta:
 
-Busca la sección `DATABASES` y cámbiala a:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'insightboard',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': '5432',
-    }
-}
+```bash
+mkdir config\settings
 ```
 
-**Nota:** Usamos `db` como host porque es el nombre del servicio en Docker.
+Mueve el settings original:
 
-### 6.2. Agregar las apps
-
-Busca `INSTALLED_APPS` y agrega al final:
-
-```python
-INSTALLED_APPS = [
-    # ... las apps que ya vienen ...
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'drf_spectacular',
-    'django_cors_headers',
-    'celery',
-    'apps.users',
-    'apps.analytics',
-    'apps.core',
-]
+```bash
+move config\settings.py config\settings\base.py
 ```
 
-### 6.3. Configurar el usuario personalizado
-
-Agrega esto al final del archivo:
-
-```python
-AUTH_USER_MODEL = 'users.User'
-```
-
-Esto le dice a Django: "No uses el usuario por defecto, usa el nuestro".
-
----
-
-## Paso 7: Configurar `config/urls.py`
-
-Abre `config/urls.py` y cámbialo a:
-
-```python
-from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/auth/', include('apps.users.urls')),
-    path('api/events/', include('apps.analytics.urls')),
-    path('api/reports/', include('apps.analytics.report_urls')),
-    path('api/metrics/', include('apps.analytics.metric_urls')),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('', include('apps.core.urls')),
-]
-```
-
----
-
-## Paso 8: Crear el modelo de usuario
-
-Abre `apps/users/models.py` y escribe:
-
-```python
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
-
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    def __str__(self):
-        return self.email
-```
-
-Esto crea un usuario personalizado que usa email en vez de username.
-
----
-
-## Paso 9: Configurar `apps/users/admin.py`
-
-```python
-from django.contrib import admin
-from .models import User
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['email', 'username', 'is_staff']
-    search_fields = ['email', 'username']
-```
-
----
-
-## Paso 10: Crear el modelo de DataSource
-
-Abre `apps/analytics/models.py` y escribe:
-
-```python
-from django.db import models
-from django.conf import settings
-
-
-class DataSource(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-```
-
----
-
-## Paso 11: Crear el modelo de Event
-
-En el mismo archivo `apps/analytics/models.py`, agrega:
-
-```python
-class Event(models.Model):
-    source = models.ForeignKey(DataSource, on_delete=models.CASCADE, related_name='events')
-    event_type = models.CharField(max_length=50)
-    payload = models.JSONField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['event_type', 'created_at']),
-        ]
-
-    def __str__(self):
-        return f"{self.event_type} - {self.created_at}"
-```
-
----
-
-## Paso 12: Crear el modelo de SavedReport
-
-En el mismo archivo, agrega:
-
-```python
-class SavedReport(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_reports')
-    name = models.CharField(max_length=100)
-    config = models.JSONField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-```
-
----
-
-## Paso 13: Crear el modelo de DailyMetric
-
-```python
-class DailyMetric(models.Model):
-    date = models.DateField()
-    event_type = models.CharField(max_length=50)
-    count = models.BigIntegerField()
-    unique_users = models.BigIntegerField()
-
-    class Meta:
-        indexes = [models.Index(fields=['date', 'event_type'])]
-
-    def __str__(self):
-        return f"{self.date} - {self.event_type}: {self.count}"
-```
-
----
-
-## Paso 14: Configurar el admin de analytics
-
-Abre `apps/analytics/admin.py` y escribe:
-
-```python
-from django.contrib import admin
-from .models import Event, DataSource, SavedReport, DailyMetric
-
-
-@admin.register(DataSource)
-class DataSourceAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_by', 'created_at']
-
-
-@admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
-    list_display = ['id', 'source', 'event_type', 'created_at']
-    list_filter = ['event_type', 'source']
-
-
-@admin.register(SavedReport)
-class SavedReportAdmin(admin.ModelAdmin):
-    list_display = ['name', 'user', 'created_at']
-
-
-@admin.register(DailyMetric)
-class DailyMetricAdmin(admin.ModelAdmin):
-    list_display = ['date', 'event_type', 'count', 'unique_users']
-```
-
----
-
-## Paso 15: Configurar el core app
-
-Crea `apps/core/views.py`:
-
-```python
-from django.http import JsonResponse
-
-def health_check(request):
-    return JsonResponse({'status': 'ok'})
-```
-
-Crea `apps/core/urls.py`:
-
-```python
-from django.urls import path
-from . import views
-
-urlpatterns = [
-    path('health/', views.health_check, name='health-check'),
-]
-```
-
-Crea `apps/core/apps.py`:
-
-```python
-from django.apps import AppConfig
-
-class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.core'
-```
-
-Crea `apps/core/__init__.py` (vacío).
-
----
-
-## Paso 16: Configurar Celery
-
-Crea `config/celery_app.py`:
-
-```python
-import os
-from celery import Celery
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
-
-app = Celery('insightboard')
-app.config_from_object('django.conf:settings', namespace='CELERY')
-app.autodiscover_tasks()
-```
-
----
-
-## Paso 17: Archivos de settings
-
-### `config/settings/__init__.py` (vacío)
+Crea el archivo de desarrollo:
 
 ```bash
 type nul > config\settings\__init__.py
 ```
 
-### `config/settings/base.py`
+---
+
+## Paso 6: Configurar config/settings/base.py
+
+Abre `config/settings/base.py` en VS Code y reemplaza TODO el contenido con:
 
 ```python
 import os
@@ -530,7 +265,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'InsightBoard API',
-    'DESCRIPTION': 'Plataforma de analítica con recolección de datos, reportes personalizados y visualizaciones D3.js',
+    'DESCRIPTION': 'Plataforma de analitica con recoleccion de datos, reportes personalizados y visualizaciones interactivas',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
@@ -550,7 +285,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 ```
 
-### `config/settings/development.py`
+---
+
+## Paso 7: Configurar config/settings/development.py
+
+Abre `config/settings/development.py` y escribe:
 
 ```python
 from .base import *
@@ -560,46 +299,29 @@ ALLOWED_HOSTS = ['*']
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ```
 
-### `config/urls.py`
+---
 
-```python
-from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+## Paso 8: Crear el archivo .env
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/auth/', include('apps.users.urls')),
-    path('api/events/', include('apps.analytics.urls')),
-    path('api/reports/', include('apps.analytics.report_urls')),
-    path('api/metrics/', include('apps.analytics.metric_urls')),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('', include('apps.core.urls')),
-]
+Crea un archivo `.env` en la carpeta raiz del proyecto:
+
+```
+DEBUG=True
+DJANGO_SECRET_KEY=django-insecure-change-me-in-production
+POSTGRES_DB=insightboard
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+REDIS_URL=redis://redis:6379/0
+ALLOWED_HOSTS=localhost,127.0.0.1
 ```
 
-### `config/wsgi.py`
+---
 
-```python
-import os
-from django.core.wsgi import get_wsgi_application
+## Paso 9: Configurar manage.py
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
-application = get_wsgi_application()
-```
-
-### `config/asgi.py`
-
-```python
-import os
-from django.core.asgi import get_asgi_application
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
-application = get_asgi_application()
-```
-
-### `manage.py`
+Abre `manage.py` y reemplaza el contenido con:
 
 ```python
 import os
@@ -620,25 +342,238 @@ if __name__ == '__main__':
 
 ---
 
-## Paso 18: Crear el archivo `.env`
+## Paso 10: Configurar config/wsgi.py
 
-Crea `.env` en la carpeta principal:
+```python
+import os
+from django.core.wsgi import get_wsgi_application
 
-```
-DEBUG=True
-DJANGO_SECRET_KEY=django-insecure-change-me-in-production
-POSTGRES_DB=insightboard
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-REDIS_URL=redis://redis:6379/0
-ALLOWED_HOSTS=localhost,127.0.0.1
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+application = get_wsgi_application()
 ```
 
 ---
 
-## Paso 19: Crear migraciones
+## Paso 11: Configurar config/asgi.py
+
+```python
+import os
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+application = get_asgi_application()
+```
+
+---
+
+## Paso 12: Configurar Celery
+
+Crea `config/celery_app.py`:
+
+```python
+import os
+from celery import Celery
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+
+app = Celery('insightboard')
+app.config_from_object('django.conf:settings', namespace='CELERY')
+app.autodiscover_tasks()
+```
+
+---
+
+## Paso 13: Configurar URLs
+
+Abre `config/urls.py` y escribe:
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/auth/', include('apps.users.urls')),
+    path('api/events/', include('apps.analytics.urls')),
+    path('api/reports/', include('apps.analytics.report_urls')),
+    path('api/metrics/', include('apps.analytics.metric_urls')),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('', include('apps.core.urls')),
+]
+```
+
+---
+
+## Paso 14: Crear el modelo de usuario
+
+Abre `apps/users/models.py` y escribe:
+
+```python
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __str__(self):
+        return self.email
+```
+
+---
+
+## Paso 15: Configurar admin de users
+
+Abre `apps/users/admin.py` y escribe:
+
+```python
+from django.contrib import admin
+from .models import User
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['email', 'username', 'is_staff']
+    search_fields = ['email', 'username']
+```
+
+---
+
+## Paso 16: Crear los modelos de analytics
+
+Abre `apps/analytics/models.py` y escribe:
+
+```python
+from django.db import models
+from django.conf import settings
+
+
+class DataSource(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Event(models.Model):
+    source = models.ForeignKey(DataSource, on_delete=models.CASCADE, related_name='events')
+    event_type = models.CharField(max_length=50)
+    payload = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['event_type', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} - {self.created_at}"
+
+
+class SavedReport(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_reports')
+    name = models.CharField(max_length=100)
+    config = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class DailyMetric(models.Model):
+    date = models.DateField()
+    event_type = models.CharField(max_length=50)
+    count = models.BigIntegerField()
+    unique_users = models.BigIntegerField()
+
+    class Meta:
+        indexes = [models.Index(fields=['date', 'event_type'])]
+
+    def __str__(self):
+        return f"{self.date} - {self.event_type}: {self.count}"
+```
+
+---
+
+## Paso 17: Configurar admin de analytics
+
+Abre `apps/analytics/admin.py` y escribe:
+
+```python
+from django.contrib import admin
+from .models import Event, DataSource, SavedReport, DailyMetric
+
+
+@admin.register(DataSource)
+class DataSourceAdmin(admin.ModelAdmin):
+    list_display = ['name', 'created_by', 'created_at']
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['id', 'source', 'event_type', 'created_at']
+    list_filter = ['event_type', 'source']
+
+
+@admin.register(SavedReport)
+class SavedReportAdmin(admin.ModelAdmin):
+    list_display = ['name', 'user', 'created_at']
+
+
+@admin.register(DailyMetric)
+class DailyMetricAdmin(admin.ModelAdmin):
+    list_display = ['date', 'event_type', 'count', 'unique_users']
+```
+
+---
+
+## Paso 18: Configurar core app
+
+Crea `apps/core/__init__.py` (vacio).
+
+Crea `apps/core/apps.py`:
+
+```python
+from django.apps import AppConfig
+
+
+class CoreConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.core'
+```
+
+Crea `apps/core/views.py`:
+
+```python
+from django.http import JsonResponse
+
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'})
+```
+
+Crea `apps/core/urls.py`:
+
+```python
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('health/', views.health_check, name='health-check'),
+]
+```
+
+---
+
+## Paso 19: Crear las migraciones
 
 Django va a crear los "planos" de las tablas:
 
@@ -646,7 +581,8 @@ Django va a crear los "planos" de las tablas:
 docker-compose exec web uv run python manage.py makemigrations
 ```
 
-Verás algo como:
+Debes ver:
+
 ```
 Migrations for 'analytics':
   apps\analytics\migrations\0001_initial.py
@@ -656,16 +592,18 @@ Migrations for 'users':
 
 ---
 
-## Paso 20: Aplicar migraciones
+## Paso 20: Aplicar las migraciones
 
-Ahora construye las tablas en la base de datos:
+Construye las tablas en la base de datos:
 
 ```bash
 docker-compose exec web uv run python manage.py migrate
 ```
 
-Verás:
+Debes ver `OK` en cada migracion:
+
 ```
+Applying auth.0001_initial... OK
 Applying users.0001_initial... OK
 Applying analytics.0001_initial... OK
 ...
@@ -680,41 +618,58 @@ docker-compose exec web uv run python manage.py createsuperuser
 ```
 
 Ingresa:
-- Usuario: `admin`
 - Email: `admin@insightboard.com`
-- Contraseña: `admin123`
+- Username: `admin`
+- Contrasena: `admin123`
 
 ---
 
 ## Paso 22: Verificar que funciona
 
-Abre el navegador en:
+Abre el navegador en estas URLs:
 
-| URL | Qué verás |
-|-----|-----------|
-| [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) | Panel de administración |
-| [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/) | Documentación Swagger |
-| [http://127.0.0.1:8000/api/health/](http://127.0.0.1:8000/api/health/) | `{"status": "ok"}` |
+| URL | Que debes ver |
+|-----|--------------|
+| http://127.0.0.1:8000/admin/ | Panel de administracion (login) |
+| http://127.0.0.1:8000/api/docs/ | Documentacion Swagger de la API |
+| http://127.0.0.1:8000/health/ | `{"status": "ok"}` |
 
----
+### Prueba completa
 
-## ¿Qué sigue?
-
-Ahora que tienes el proyecto armado, en el siguiente capítulo vamos a explicar **qué son los modelos** y cómo funcionan las piezas que acabamos de crear.
-
-> **Ejercicio para casa:** Entra al panel de admin y crea una "Fuente de Datos" llamada "Tienda Online". No te preocupes si no entiendes todo todavía, solo practica hacer clics.
+1. Ve a http://127.0.0.1:8000/admin/
+2. Ingresa con `admin@insightboard.com` y `admin123`
+3. Si ves el panel de administracion con Users y Analytics, **¡funciono!**
 
 ---
 
-## Resumen del capítulo C3
+## Solucion de problemas
 
-✅ Creamos el proyecto Django con `startproject`  
-✅ Creamos 3 apps (`users`, `analytics`, `core`)  
-✅ Configuramos settings, URLs, WSGI, ASGI  
-✅ Creamos los modelos de usuario y eventos  
-✅ Configuramos el panel de administración  
-✅ Creamos las migraciones y aplicamos  
-✅ Creamos el superusuario  
-✅ Verificamos que el servidor funciona  
+### "No se pudo conectar a la base de datos"
+- Verifica que Docker esta corriendo: `docker-compose ps`
+- Verifica que el servicio `db` esta en `Up`
 
-**¡Tu proyecto Django ya está vivo!** 🧠⚡
+### "ModuleNotFoundError: No module named 'apps'"
+- Asegurate de que `apps/` tiene `__init__.py` en cada subcarpeta
+- Verifica que `INSTALLED_APPS` incluye `'apps.users'`, `'apps.analytics'`, `'apps.core'`
+
+### "OperationalError: FATAL: password authentication failed"
+- Verifica que las credenciales en `.env` coinciden con las de `docker-compose.yml`
+
+---
+
+## Resumen del paso
+
+| Paso | Que hicimos | Verificacion |
+|------|------------|-------------|
+| 2 | Crear proyecto Django | `dir config` muestra archivos |
+| 3 | Crear 3 apps | `dir apps` muestra 3 carpetas |
+| 6-8 | Configurar settings | Archivos creados correctamente |
+| 14-16 | Crear modelos | Archivos models.py escritos |
+| 19 | Crear migraciones | Mensajes de "Migrations for..." |
+| 20 | Aplicar migraciones | Mensajes de "OK" |
+| 21 | Crear superusuario | Puedes ingresar al admin |
+| 22 | Verificar | Admin, Swagger y health funcionan |
+
+---
+
+**¿Todo funciono? Sigue con el [Capitulo 4: Modelos de base de datos](../c4/README.md)**

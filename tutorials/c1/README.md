@@ -1,137 +1,190 @@
-# C1 - ¡Bienvenido a tu taller de creación digital!
+# C1 - Instalar herramientas
 
-> **Edad recomendada:** 11 años en adelante  
 > **Tiempo estimado:** 20 minutos  
 > **Dificultad:** ⭐ ⭐
 
 ---
 
-## ¿Qué vamos a construir?
+## ¿Que vamos a hacer?
 
-Imagina que tienes una **caja mágica** donde puedes guardar información de todo lo que pasa en tu vida:
-- Cuántos goles metiste jugando fútbol
-- Cuántos libros leíste en un mes
-- Cuántas veces comiste pizza en una semana
+Vamos a instalar en tu computadora las 4 herramientas que necesitamos para programar:
 
-Con **InsightBoard**, esa caja mágica se convierte en gráficos, números y colores que te cuentan historias.
-
----
-
-## ¿Qué necesitamos antes de empezar?
-
-### 1. Una computadora con Windows
-Vamos a usar:
-- **Terminal** (una pantalla negra donde escribimos comandos)
-- **Visual Studio Code** (nuestro taller de trabajo)
-- **Git** (para guardar nuestros avances)
-
-### 2. Instalar Python
-Python es como el **lenguaje secreto** que entiende tu computadora para hacer cosas increíbles.
-
-1. Ve a [python.org/downloads](https://www.python.org/downloads/)
-2. Descarga la versión que diga **"Download Python 3.12"**
-3. **IMPORTANTE:** Cuando se abra el instalador, marca la casilla que dice **"Add Python to PATH"** (esto es como darle a Python una llave para entrar a tu computadora)
-4. Clic en **"Install Now"**
-5. Espera a que termine y clic en **"Close"**
-
-### 3. Instalar Visual Studio Code
-Es como el **cuaderno de dibujo** de los programadores.
-
-1. Ve a [code.visualstudio.com](https://code.visualstudio.com/)
-2. Descarga la versión para Windows
-3. Instala normalmente (siguiente, siguiente, siguiente...)
-4. Abre VS Code
-
-### 4. Instalar Git
-Git es como el **botón de guardar** de un videojuego, pero para código.
-
-1. Ve a [git-scm.com/downloads/win](https://git-scm.com/downloads/win)
-2. Descarga e instala
-3. Deja todas las opciones como vienen por defecto
+| Herramienta | Para que sirve | Analogia |
+|------------|---------------|----------|
+| **Python** | Lenguaje de programacion | El idioma de la computadora |
+| **VS Code** | Editor de codigo | El cuaderno donde escribimos |
+| **Git** | Control de versiones | El boton de guardar |
+| **uv** | Gestor de paquetes | El instalador automatico |
 
 ---
 
-## ¿Qué es `uv`?
+## Paso 1: Instalar Python
 
-`uv` es una **herramienta mágica** que hace el trabajo pesado por nosotros:
-- Instala programas rápido como un rayo ⚡
-- Crea carpetas organizadas
-- Se asegura de que todos los programas funcionen juntos sin pelear
+1. Abre tu navegador ve a **https://www.python.org/downloads/**
+2. Haz clic en el boton azul que dice **"Download Python 3.12.x"**
+3. Ejecuta el archivo que se descargo
+4. **MUY IMPORTANTE:** Marca la casilla **"Add Python to PATH"** (abajo en el instalador)
+5. Haz clic en **"Install Now"**
+6. Espera a que termine y haz clic en **"Close"**
 
-### Instalar `uv`
+### Verificar que funciono
 
-Abre la **Terminal** de Windows (presiona `Windows + R`, escribe `cmd` y presiona Enter) y escribe:
+Abre la **Terminal de Windows**:
+- Presiona `Windows + R`
+- Escribe `cmd`
+- Presiona `Enter`
+
+Escribe este comando y presiona Enter:
+
+```bash
+python --version
+```
+
+**Resultado esperado:** Debes ver algo como `Python 3.12.x`
+
+> Si ves el numero de version, Python esta instalado correctamente. Si ves un error, vuelve a instalar y asegurate de marcar "Add to PATH".
+
+---
+
+## Paso 2: Instalar Visual Studio Code
+
+1. Ve a **https://code.visualstudio.com/**
+2. Haz clic en **"Download for Windows"**
+3. Ejecuta el instalador
+4. Sigue haciendo clic en "Siguiente" hasta terminar (deja las opciones por defecto)
+5. Abre VS Code
+
+### Verificar que funciono
+
+Abre VS Code. Debes ver una pantalla como esta:
+
+```
+┌─────────────────────────────────────┐
+│  Visual Studio Code                 │
+│                                     │
+│  [Boton azul: "Open Folder"]        │
+│  [Archivos recientes]               │
+└─────────────────────────────────────┘
+
+Si ves esto, VS Code esta listo.
+```
+
+---
+
+## Paso 3: Instalar Git
+
+1. Ve a **https://git-scm.com/downloads/win**
+2. Haz clic en la version para Windows
+3. Ejecuta el instalador
+4. Deja **TODAS** las opciones como vienen por defecto (siguiente, siguiente, siguiente...)
+5. Haz clic en "Install" y espera
+
+### Verificar que funciono
+
+En la terminal escribe:
+
+```bash
+git --version
+```
+
+**Resultado esperado:** `git version 2.x.x`
+
+---
+
+## Paso 4: Instalar uv
+
+`uv` es un instalador rapido de paquetes de Python. Reemplaza a `pip` y es mucho mas veloz.
+
+En la terminal de Windows escribe:
 
 ```bash
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Esto descarga e instala `uv` automáticamente. Cuando termine, cierra la terminal y vuelve a abrirla.
+Espera a que termine. Cuando veas el mensaje de exito, **cierra la terminal y vuelve a abrirla**.
 
-Para verificar que funcionó, escribe:
+### Verificar que funciono
+
+Abre una **nueva** terminal y escribe:
 
 ```bash
 uv --version
 ```
 
-Si ves algo como `uv 0.8.15`, ¡felicidades! 🎉
+**Resultado esperado:** `uv 0.x.x` (cualquier numero de version sirve)
 
 ---
 
-## Abriendo nuestro proyecto en VS Code
+## Paso 5: Abrir el proyecto en VS Code
 
-1. Abre VS Code
-2. Ve a **File > Open Folder**
-3. Busca la carpeta `InsightBoard` que está en `C:\Users\LILLYU\Documents\GitHub\InsightBoard`
-4. Clic en **"Select Folder"**
+1. Abre **VS Code**
+2. Ve a **File > Open Folder** (Archivo > Abrir carpeta)
+3. Navega hasta la carpeta `InsightBoard`
+4. Haz clic en **"Select Folder"**
 
-Ahora deberías ver todos los archivos del proyecto en el panel izquierdo de VS Code.
+Debes ver la estructura del proyecto en el panel izquierdo:
 
----
-
-## ¿Cómo funciona una terminal?
-
-La terminal es como hablarle a tu computadora en **comandos secretos**. Aquí los más importantes:
-
-| Comando | ¿Qué hace? | Analogía |
-|---------|-----------|----------|
-| `cd carpeta` | Entra a una carpeta | Como abrir una puerta |
-| `dir` o `ls` | Muestra qué hay dentro | Como encender la luz |
-| `uv run comando` | Ejecuta un comando | Como presionar play |
-| `cls` | Limpia la pantalla | Como borrar el pizarrón |
-
-**Tip:** Si te equivocas, no pasa nada. Puedes volver a escribir el comando.
-
----
-
-## Tu primera prueba: crear una carpeta
-
-Vamos a practicar creando una carpeta de prueba:
-
-```bash
-mkdir mi_carpeta_prueba
-dir
+```
+InsightBoard/
+├── config/
+├── apps/
+├── frontend/
+├── tutorials/
+├── docker-compose.yml
+├── manage.py
+└── ...
 ```
 
-Si ves `mi_carpeta_prueba` en la lista, ¡lo hiciste bien! 🎉
+---
+
+## Paso 6: Probar la terminal
+
+Practica con estos comandos basicos. Escribe cada uno y presiona Enter:
+
+```bash
+# Ver en que carpeta estas
+cd
+
+# Listar archivos
+dir
+
+# Ver la version de Python
+python --version
+
+# Ver la version de uv
+uv --version
+```
+
+Si todos funcionan, ¡estas listo!
 
 ---
 
-## ¿Qué sigue?
+## Solucion de problemas
 
-En el siguiente capítulo vamos a entender cómo organizar la información de InsightBoard usando **modelos de base de datos** como si fueran piezas de LEGO.
+### "python no se reconoce como comando"
+- Vuelve a instalar Python
+- Marca **"Add Python to PATH"** en el instalador
+- Cierra y vuelve a abrir la terminal
 
-> **Ejercicio para casa:** Dibuja en un papel cómo organizarías tu colección de videojuegos, libros o juguetes. ¿Por categorías? ¿Por fecha? ¿Por color?
+### "git no se reconoce como comando"
+- Vuelve a instalar Git
+- Cierra y vuelve a abrir la terminal
+
+### "uv no se reconoce como comando"
+- Cierra la terminal y vuelve a abrirla
+- Si no funciona, ejecuta el instalador de uv de nuevo
 
 ---
 
-## Resumen del capítulo C1
+## Resumen del paso
 
-✅ Instalamos Python  
-✅ Instalamos VS Code  
-✅ Instalamos Git  
-✅ Instalamos `uv`  
-✅ Aprendimos comandos básicos de terminal  
-✅ Abrimos el proyecto en VS Code  
+| Herramienta | Comando para verificar | Resultado esperado |
+|------------|----------------------|-------------------|
+| Python | `python --version` | `Python 3.12.x` |
+| VS Code | Abrir la aplicacion | Se abre la ventana |
+| Git | `git --version` | `git version 2.x.x` |
+| uv | `uv --version` | `uv 0.x.x` |
 
-**¡Estás listo para el siguiente nivel!** 🚀
+---
+
+**¿Todo funciono? Sigue con el [Capitulo 2: Docker y base de datos](../c2/README.md)**

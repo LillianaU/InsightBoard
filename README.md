@@ -1,47 +1,50 @@
 # InsightBoard
 
-Plataforma de analítica que permite recolectar datos, generar reportes personalizados, visualizar estadísticas interactivas con D3.js y exportar resultados.
+Plataforma de analitica que permite recolectar datos, generar reportes personalizados, visualizar estadisticas interactivas con Chart.js y exportar resultados.
 
-## Stack técnico
+---
 
-| Capa | Tecnología | Motivo |
+## Tutoriales
+
+Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutoriales](./tutorials/README.md)**.
+
+| Cap | Tema | Tiempo |
+|-----|------|--------|
+| [C0](./tutorials/c0/README.md) | Que es InsightBoard | 10 min |
+| [C1](./tutorials/c1/README.md) | Instalar herramientas | 20 min |
+| [C2](./tutorials/c2/README.md) | Docker y base de datos | 25 min |
+| [C3](./tutorials/c3/README.md) | Crear proyecto Django | 35 min |
+| [C4](./tutorials/c4/README.md) | Modelos de base de datos | 30 min |
+| [C5](./tutorials/c5/README.md) | API REST con DRF | 40 min |
+| [C6](./tutorials/c6/README.md) | Frontend y dashboards | 35 min |
+| [C7](./tutorials/c7/README.md) | Autenticacion JWT | 25 min |
+| [C8](./tutorials/c8/README.md) | Probar y deploy | 20 min |
+
+---
+
+## Stack tecnico
+
+| Capa | Tecnologia | Motivo |
 |------|-----------|--------|
-| Backend | Django + Django REST Framework | Rápido, seguro y profesional |
+| Backend | Django + Django REST Framework | Rapido, seguro y profesional |
 | Base de datos | PostgreSQL | Vistas materializadas, JSON, consultas complejas |
-| Documentación API | drf-spectacular (Swagger/OpenAPI) | Documentación automática |
-| Frontend | Bootstrap 5 + Chart.js | Interfaz responsive y gráficos |
-| Autenticación | JWT (SimpleJWT) | Estándar moderno |
-| Exportación | openpyxl / ReportLab / csv | Excel, PDF y CSV |
-| Despliegue | Railway / Render + Vercel | Fácil de mostrar en vivo |
+| Documentacion API | drf-spectacular (Swagger/OpenAPI) | Documentacion automatica |
+| Frontend | Bootstrap 5 + Chart.js | Interfaz responsive y graficos |
+| Autenticacion | JWT (SimpleJWT) | Estandar moderno |
+| Exportacion | openpyxl / ReportLab / csv | Excel, PDF y CSV |
+| Container | Docker + Docker Compose | Empaquetado portable |
 
-## Características
+---
 
-1. **Recolección de datos** - Endpoint para recibir eventos con JSONField, importación de CSV/Excel
-2. **Dashboards interactivos** - Gráficos de líneas, barras, pasteles/donuts con Chart.js
-3. **Reportes personalizados** - Crear reportes eligiendo métricas, dimensiones y filtros
-4. **Exportación** - Excel, PDF y CSV con gráficos incluidos
-5. **Vistas materializadas en PostgreSQL** - Rendimiento optimizado para métricas
+## Caracteristicas
 
-## Frontend
+1. **Recoleccion de datos** - Endpoint para recibir eventos con JSONField, importacion de CSV
+2. **Dashboards interactivos** - Graficos de lineas, barras, pasteles/donuts con Chart.js
+3. **Reportes personalizados** - Crear reportes eligiendo metricas, dimensiones y filtros
+4. **Exportacion** - Excel, PDF y CSV con graficos incluidos
+5. **Vistas materializadas en PostgreSQL** - Rendimiento optimizado para metricas
 
-El frontend está construido con **Bootstrap 5** y **Chart.js**. Incluye:
-
-- **Dashboard** (`frontend/index.html`) - Estadísticas generales y gráficos
-- **Eventos** (`frontend/events.html`) - Formulario para registrar eventos
-- **Reportes** (`frontend/reports.html`) - Crear y visualizar reportes personalizados
-
-Para abrir el frontend:
-
-```bash
-# Opción 1: Abrir directamente
-start frontend/index.html
-
-# Opción 2: Servir con Python
-cd frontend
-python -m http.server 8080
-```
-
-**Nota:** Asegúrate de que el backend esté corriendo en `http://127.0.0.1:8000`.
+---
 
 ## Levantar el proyecto
 
@@ -65,21 +68,53 @@ docker-compose exec web uv run python manage.py createsuperuser
 #    - Admin: http://127.0.0.1:8000/admin/
 ```
 
+---
+
 ## Credenciales de acceso
 
-| Usuario | Contraseña | Descripción |
+| Usuario | Contrasena | Descripcion |
 |---------|-----------|-------------|
-| `admin` | `admin123` | Administrador del sistema |
+| `admin@insightboard.com` | `admin123` | Administrador del sistema |
 
-Estas credenciales se crean al ejecutar `createsuperuser`.
+---
 
-## Acceder al sistema
+## Frontend
 
-1. Abre el frontend: `http://localhost:8080`
-2. Ingresa con `admin` / `admin123`
-3. Verás el dashboard con estadísticas
+El frontend esta construido con **Bootstrap 5** y **Chart.js**. Incluye:
 
-## Solución de problemas frontend
+- **Dashboard** (`frontend/index.html`) - Estadisticas generales y graficos
+- **Eventos** (`frontend/events.html`) - Formulario para registrar eventos
+- **Reportes** (`frontend/reports.html`) - Crear y visualizar reportes personalizados
+
+Para abrir el frontend:
+
+```bash
+cd frontend
+python -m http.server 8080
+```
+
+---
+
+## Endpoints principales
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/events/ingest/` | Recibir nuevos datos |
+| GET | `/api/events/list/` | Listar eventos |
+| POST | `/api/events/csv/` | Importar CSV |
+| GET | `/api/metrics/summary/` | Resumen general |
+| GET | `/api/metrics/timeseries/` | Datos para graficos de linea |
+| GET | `/api/metrics/breakdown/` | Datos agrupados (barras/pie) |
+| GET | `/api/metrics/heatmap/` | Datos para heatmap |
+| POST | `/api/metrics/refresh/` | Refrescar vista materializada |
+| POST | `/api/reports/` | Crear reporte personalizado |
+| GET | `/api/reports/{id}/` | Detalle de reporte |
+| GET | `/api/docs/` | Swagger UI |
+| GET | `/api/health/` | Health check |
+
+---
+
+## Solucion de problemas
 
 ### "No puedo acceder al frontend"
 Sirve el frontend con un servidor local:
@@ -88,8 +123,8 @@ cd frontend
 python -m http.server 8080
 ```
 
-### "Error de conexión en el login"
-Asegúrate de que el backend esté corriendo:
+### "Error de conexion en el login"
+Asegurate de que el backend este corriendo:
 ```bash
 docker-compose ps
 ```
@@ -97,22 +132,7 @@ docker-compose ps
 ### "No veo el login"
 Abre directamente: `frontend/login.html` o `http://localhost:8080/login.html`
 
-## Endpoints principales
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/events/ingest/` | Recibir nuevos datos |
-| GET | `/api/events/list/` | Listar eventos |
-| POST | `/api/events/csv/` | Importar CSV |
-| GET | `/api/metrics/summary/` | Resumen general |
-| GET | `/api/metrics/timeseries/` | Datos para gráficos de línea |
-| GET | `/api/metrics/breakdown/` | Datos agrupados (barras/pie) |
-| GET | `/api/metrics/heatmap/` | Datos para heatmap |
-| POST | `/api/metrics/refresh/` | Refrescar vista materializada |
-| POST | `/api/reports/` | Crear reporte personalizado |
-| GET | `/api/reports/{id}/` | Detalle de reporte |
-| GET | `/api/docs/` | Swagger UI |
-| GET | `/api/health/` | Health check |
+---
 
 ## Licencia
 

@@ -1,78 +1,129 @@
-# C2 - Encender el taller: Docker y la base de datos
+# C2 - Docker y base de datos
 
-> **Edad recomendada:** 10-11 años  
 > **Tiempo estimado:** 25 minutos  
 > **Dificultad:** ⭐ ⭐ ⭐
 
 ---
 
-## ¿Qué vamos a hacer?
+## ¿Que vamos a hacer?
 
-En este capítulo vamos a **encender la base de datos** para que esté lista cuando empecemos a programar. No escribiremos código todavía, solo prepararemos el "escenario de juego".
+Vamos a instalar Docker y levantar los servicios que InsightBoard necesita para funcionar:
+- **PostgreSQL** - Donde se guardan los datos
+- **Redis** - Memoria rapida para tareas en segundo plano
+- **Web** - El servidor de Django
+- **Celery** - Trabajador de tareas pesadas
 
 ---
 
-## ¿Qué es Docker? (versión rápida)
+## ¿Que es Docker?
 
 Docker es como **tener varias computadoras dentro de tu computadora**.
 
-En vez de instalar PostgreSQL, Redis, etc. una por una y pelear con configuraciones, Docker nos da:
-- Una "cajita" con PostgreSQL
-- Una "cajita" con Redis
-- Una "cajita" con nuestro servidor web
+En vez de instalar PostgreSQL, Redis, etc. una por una y pelear con configuraciones, Docker nos da "cajitas" listas para usar:
 
-Todas se comunican entre sí sin instalarlas manualmente.
+```
+┌─────────────────────────────────────────────────┐
+│                TU COMPUTADORA                    │
+│                                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
+│  │    db     │  │  redis   │  │   web    │      │
+│  │ PostgreSQL│  │  Cache   │  │  Django  │      │
+│  │  :5432   │  │  :6379   │  │  :8000   │      │
+│  └──────────┘  └──────────┘  └──────────┘      │
+│                                                  │
+│  ┌──────────┐                                   │
+│  │ celery   │                                   │
+│  │ Trabajador│                                   │
+│  └──────────┘                                   │
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Paso 1: Instalar Docker Desktop
 
-1. Ve a [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
-2. Descarga la versión para **Windows**
-3. Ejecuta el instalador y marca todas las casillas
-4. Clic en **"Finish"**
-5. **Reinicia tu computadora** (importante)
+1. Ve a **https://www.docker.com/products/docker-desktop/**
+2. Haz clic en **"Download for Windows"**
+3. Ejecuta el instalador
+4. Marca todas las casillas que aparezcan
+5. Haz clic en **"Finish"**
+6. **REINICIA tu computadora** (esto es obligatorio)
 
-Cuando vuelvas a encenderla, busca una **ballena 🐳** en tu barra de tareas. Eso significa que Docker está vivo.
+### Verificar que funciono
 
----
+Despues de reiniciar, busca una **ballena** en tu barra de tareas (esquina inferior derecha). Si la ves, Docker esta vivo.
 
-## Paso 2: Verificar que Docker funciona
-
-Abre la terminal de Windows (`Windows + R`, escribe `cmd`, Enter) y escribe:
+Abre la terminal y escribe:
 
 ```bash
 docker --version
 ```
 
-Si ves `Docker version 24.0.5`, ¡perfecto! 🎉
+**Resultado esperado:** `Docker version 24.x.x` o similar
 
 ---
 
-## Paso 3: Entender el archivo `docker-compose.yml`
+## Paso 2: Entender docker-compose.yml
 
-Ya tienes este archivo en tu proyecto. Es como la **lista de compras** de un supermercado: le dice a Docker exactamente qué necesitamos.
+En la carpeta del proyecto hay un archivo `docker-compose.yml`. Este archivo es la **lista de compras** de Docker: le dice exactamente que necesitamos.
 
-Las "cajitas" que necesitamos son:
+```yaml
+services:
+  db:          # PostgreSQL - guarda los datos
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: insightboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
 
-| Cajita | ¿Qué es? | ¿Para qué sirve? |
-|--------|----------|------------------|
-| `db` | PostgreSQL | Guardar todos los datos (eventos, usuarios, reportes) |
-| `redis` | Redis | Memoria rápida para tareas en segundo plano |
-| `web` | Nuestro servidor | Donde vivirá la página web y la API |
-| `celery` | Trabajador | Hace tareas pesadas sin detener el servidor |
+  redis:       # Redis - memoria rapida
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  web:         # Django - el servidor web
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  celery:      # Celery - tareas en segundo plano
+    build: .
+    command: celery -A config.celery_app worker
+    depends_on:
+      - redis
+```
+
+### Explicacion de cada servicio
+
+| Servicio | Puerto | Que hace |
+|----------|--------|----------|
+| `db` | 5432 | Guarda usuarios, eventos, reportes |
+| `redis` | 6379 | Memoria cache para Celery |
+| `web` | 8000 | Sirve la API y el admin de Django |
+| `celery` | - | Ejecuta tareas pesadas sin bloquear el servidor |
 
 ---
 
-## Paso 4: Levantar las cajitas
+## Paso 3: Levantar los servicios
 
-En la terminal, en la carpeta del proyecto:
+En la terminal, navega a la carpeta del proyecto:
+
+```bash
+cd C:\Users\LILLYU\Documents\GitHub\InsightBoard
+```
+
+Ejecuta:
 
 ```bash
 docker-compose up -d
 ```
 
-Verás muchas líneas. Las importantes son al final:
+Espera unos minutos. Veras algo como:
 
 ```
  ✔ Container insightboard-db-1       Started
@@ -81,74 +132,48 @@ Verás muchas líneas. Las importantes son al final:
  ✔ Container insightboard-celery-1   Started
 ```
 
-**¡Eso significa que ya tienes 4 computadoras funcionando dentro de tu computadora!** 🚀
+**Si ves 4 "Started", ¡funciono!**
 
 ---
 
-## Paso 5: Verificar que están vivas
+## Paso 4: Verificar que estan corriendo
 
 ```bash
 docker-compose ps
 ```
 
-Debes ver algo como:
+Debes ver los 4 servicios con estado `Up`:
 
 ```
-     Name                   Command               State           Ports
-----------------------------------------------------------------------------
-insightboard-db-1       docker-entrypoint.sh postgres   Up      0.0.0.0:5432->5432/tcp
-insightboard-redis-1    docker-entrypoint.sh redis ...   Up      0.0.0.0:6379->6379/tcp
-insightboard-web-1      uv run python manage.py run...   Up      0.0.0.0:8000->8000/tcp
+Name                    Command               State           Ports
+---------------------------------------------------------------------------
+insightboard-db-1       docker-entrypoint.sh postgres   Up   0.0.0.0:5432->5432
+insightboard-redis-1    docker-entrypoint.sh redis ...   Up   0.0.0.0:6379->6379
+insightboard-web-1      uv run python manage.py run...   Up   0.0.0.0:8000->8000
 insightboard-celery-1   uv run celery -A config.cel...   Up
 ```
 
-Si todas están en `Up`, estás listo.
+> **¿Alguno no esta en `Up`?** Ejecuta `docker-compose logs` para ver que paso.
 
 ---
 
-## Paso 6: ¿Dónde se guardan los datos?
+## Paso 5: Probar la base de datos
 
-Los datos se guardan en **volúmenes de Docker**. Son como "cajones" que Docker administra.
-
-### Regla de oro
-
-| Acción | ¿Se pierden los datos? |
-|--------|------------------------|
-| Apagar la computadora | **No** |
-| `docker-compose down` | **No** |
-| `docker-compose down -v` | **Sí** |
-
-Así que **nunca** uses `down -v` a menos que quieras borrar todo intencionalmente.
-
-### Hacer respaldos (opcional pero recomendado)
-
-Si quieres guardar una copia de tus datos:
-
-```bash
-docker-compose exec db pg_dump -U postgres insightboard > respaldo.sql
-```
-
-Esto crea un archivo `respaldo.sql` en tu carpeta del proyecto.
-
----
-
-## Paso 7: Probar la base de datos
-
-Vamos a entrar a PostgreSQL para ver que funciona:
+Vamos a entrar a PostgreSQL para confirmar que funciona:
 
 ```bash
 docker-compose exec db psql -U postgres insightboard
 ```
 
-Dentro de psql, escribe:
+Dentro de la consola de PostgreSQL escribe:
 
 ```sql
 \l
 ```
 
-Esto muestra las bases de datos. Deberías ver `insightboard`.
+Esto muestra todas las bases de datos. Debes ver `insightboard` en la lista.
 
-Para salir:
+Para salir escribe:
 
 ```sql
 \q
@@ -156,20 +181,58 @@ Para salir:
 
 ---
 
-## ¿Qué sigue?
+## Paso 6: Entender los volúmenes
 
-Ya tenemos la base de datos encendida. En el siguiente capítulo vamos a **crear el proyecto Django** y conectar todo.
+Los datos se guardan en **volumenes de Docker**. Son como "cajones" persistentes.
 
-> **Ejercicio para casa:** Dibuja en un papel las 4 cajitas (db, redis, web, celery) y conéctalas con flechas. ¿Por qué crees que `web` necesita a `db`?
+| Accion | ¿Se pierden los datos? |
+|--------|------------------------|
+| Apagar la computadora | **No** |
+| `docker-compose down` | **No** |
+| `docker-compose down -v` | **SI** (borra todo) |
+
+> **Regla de oro:** Nunca uses `docker-compose down -v` a menos que quieras borrar todos los datos intencionalmente.
 
 ---
 
-## Resumen del capítulo C2
+## Paso 7: Comandos utiles de Docker
 
-✅ Instalamos Docker Desktop  
-✅ Levantamos 4 servicios con `docker-compose up -d`  
-✅ Verificamos que están corriendo  
-✅ Aprendimos que los datos se guardan en volúmenes  
-✅ Probamos la base de datos con `psql`  
+| Comando | Que hace |
+|---------|----------|
+| `docker-compose up -d` | Enciende todos los servicios |
+| `docker-compose down` | Apaga los servicios (guarda datos) |
+| `docker-compose ps` | Muestra el estado de los servicios |
+| `docker-compose logs -f` | Muestra los logs en tiempo real |
+| `docker-compose exec web bash` | Entra a la consola del servidor web |
+| `docker-compose restart web` | Reinicia solo el servidor web |
 
-**¡Tu taller ya tiene luz, agua y electricidad!** 🔌
+---
+
+## Solucion de problemas
+
+### "Docker no inicia despues de reiniciar"
+- Abre Docker Desktop manualmente
+- Espera a que la ballena se ponga verde
+
+### "Puerto 5432 ya esta en uso"
+- Cierra cualquier otro PostgreSQL que tengas instalado
+- O cambia el puerto en `docker-compose.yml`: `"5433:5432"`
+
+### "Error de permisos"
+- Ejecuta Docker Desktop como administrador
+
+---
+
+## Resumen del paso
+
+| Paso | Comando | Resultado esperado |
+|------|---------|-------------------|
+| Instalar Docker | Descargar e instalar | Ballena en la barra de tareas |
+| Verificar | `docker --version` | `Docker version 24.x.x` |
+| Levantar | `docker-compose up -d` | 4 servicios Started |
+| Verificar estado | `docker-compose ps` | Todos en `Up` |
+| Probar DB | `docker-compose exec db psql -U postgres insightboard` | Entra a la consola |
+
+---
+
+**¿Todo funciono? Sigue con el [Capitulo 3: Crear proyecto Django](../c3/README.md)**
