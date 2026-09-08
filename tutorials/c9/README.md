@@ -145,13 +145,21 @@ uv run python manage.py createsuperuser
    - Username: `admin`
    - Contrasena: `admin123`
 
-### Opcion 2: Usar el endpoint de registro
+### Opcion 2: Usar el endpoint de registro (desde tu PC)
 
-Si no puedes acceder al Shell, usa la API:
+Si no puedes acceder al Shell, ejecuta este comando en **tu terminal local**:
 
-```bash
-curl -X POST https://insightboard.onrender.com/api/auth/register/ -H "Content-Type: application/json" -d "{\"email\": \"admin@insightboard.com\", \"username\": \"admin\", \"password\": \"admin123\"}"
+**Windows (PowerShell):**
+```powershell
+Invoke-RestMethod -Uri "https://insightboard.onrender.com/api/auth/register/" -Method Post -ContentType "application/json" -Body '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
 ```
+
+**Mac/Linux:**
+```bash
+curl -X POST https://insightboard.onrender.com/api/auth/register/ -H "Content-Type: application/json" -d '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
+```
+
+Si ves la respuesta con el email y username, el usuario se creo correctamente.
 
 ---
 
