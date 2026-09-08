@@ -130,7 +130,25 @@ postgresql://postgres:abc123@insightboard-db.render.com:5432/insightboard
 
 Una vez que el deploy termine, necesitas crear un superusuario para trabajar.
 
-### Opcion 1: Usar la consola de Render
+### Opcion 1: Usar el endpoint de registro (RECOMENDADO)
+
+Este metodo siempre funciona. Ejecuta este comando en **tu terminal local**:
+
+**Windows (PowerShell):**
+```powershell
+Invoke-RestMethod -Uri "https://insightboard.onrender.com/api/auth/register/" -Method Post -ContentType "application/json" -Body '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
+```
+
+**Mac/Linux:**
+```bash
+curl -X POST https://insightboard.onrender.com/api/auth/register/ -H "Content-Type: application/json" -d '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
+```
+
+Si ves la respuesta con el email y username, el usuario se creo correctamente.
+
+### Opcion 2: Usar la consola de Render (no siempre funciona)
+
+**Nota:** El Shell de Render no funciona en el tier gratuito. Si no puedes acceder, usa la Opcion 1.
 
 1. Ve a tu servicio web
 2. Haz clic en **"Shell"** (menu izquierdo)
@@ -144,22 +162,6 @@ uv run python manage.py createsuperuser
    - Email: `admin@insightboard.com`
    - Username: `admin`
    - Contrasena: `admin123`
-
-### Opcion 2: Usar el endpoint de registro (desde tu PC)
-
-Si no puedes acceder al Shell, ejecuta este comando en **tu terminal local**:
-
-**Windows (PowerShell):**
-```powershell
-Invoke-RestMethod -Uri "https://insightboard.onrender.com/api/auth/register/" -Method Post -ContentType "application/json" -Body '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
-```
-
-**Mac/Linux:**
-```bash
-curl -X POST https://insightboard.onrender.com/api/auth/register/ -H "Content-Type: application/json" -d '{"email":"admin@insightboard.com","username":"admin","password":"admin123"}'
-```
-
-Si ves la respuesta con el email y username, el usuario se creo correctamente.
 
 ---
 
