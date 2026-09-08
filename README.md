@@ -72,7 +72,21 @@ Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutori
 
 ## Levantar el proyecto
 
-### Con Docker (recomendado)
+### Requisitos
+
+| Herramienta | Version minima | Para que sirve |
+|-------------|---------------|----------------|
+| Python | 3.11+ | Lenguaje del backend |
+| uv | 0.5+ | Gestor de paquetes (reemplaza pip) |
+| Git | 2.0+ | Control de versiones |
+| Docker Desktop | 4.0+ | Solo si usas Docker |
+| PostgreSQL | 15+ | Solo si NO usas Docker |
+
+---
+
+### Opcion 1: Con Docker (recomendado)
+
+Docker levanta todo automaticamente (PostgreSQL, Redis, Django).
 
 ```bash
 # 1. Clona el repositorio
@@ -82,39 +96,199 @@ cd InsightBoard
 # 2. Copia el archivo de variables de entorno
 cp .env.example .env
 
-# 3. Levanta los servicios
+# 3. Levanta los servicios (PostgreSQL + Redis + Django)
 docker-compose up -d
 
-# 4. Aplica migraciones
+# 4. Aplica las migraciones de la base de datos
 docker-compose exec web uv run python manage.py migrate
 
-# 5. Crea superusuario
+# 5. Crea un usuario administrador
 docker-compose exec web uv run python manage.py createsuperuser
 
 # 6. Abre el navegador
-# Login: http://127.0.0.1:8000/login.html
-# Dashboard: http://127.0.0.1:8000/index.html
-# API Docs: http://127.0.0.1:8000/api/docs/
-# Admin: http://127.0.0.1:8000/admin/
 ```
 
-### Sin Docker
+| Pagina | URL |
+|--------|-----|
+| Login | http://127.0.0.1:8000/login.html |
+| Dashboard | http://127.0.0.1:8000/index.html |
+| API Docs | http://127.0.0.1:8000/api/docs/ |
+| Admin Django | http://127.0.0.1:8000/admin/ |
+
+**Comandos utiles de Docker:**
 
 ```bash
-# 1. Instala dependencias
-pip install -r requirements.txt
+# Ver logs en tiempo real
+docker-compose logs -f
 
-# 2. Configura PostgreSQL manualmente
-# Editar config/settings/base.py
+# Detener todos los servicios
+docker-compose down
 
-# 3. Aplica migraciones
-python manage.py migrate
+# Detener y borrar datos (reset completo)
+docker-compose down -v
 
-# 4. Crea superusuario
-python manage.py createsuperuser
+# Entrar al contenedor web
+docker-compose exec web bash
+```
 
-# 5. Ejecuta el servidor
-python manage.py runserver
+---
+
+### Opcion 2: Sin Docker (manual)
+
+Necesitas PostgreSQL instalado y corriendo en tu computadora.
+
+```bash
+# 1. Clona el repositorio
+git clone https://github.com/LillianaU/InsightBoard.git
+cd InsightBoard
+
+# 2. Crea el entorno virtual e instala dependencias
+uv venv
+uv pip install -r requirements.txt
+
+# 3. Crea la base de datos en PostgreSQL
+# Abre psql o pgAdmin y ejecuta:
+# CREATE DATABASE insightboard;
+
+# 4. Copia y edita las variables de entorno
+cp .env.example .env
+# Abre .env y编辑a DATABASE_URL con tus datos de PostgreSQL
+# Ejemplo: postgres://usuario:contraseña@localhost:5432/insightboard
+
+# 5. Aplica las migraciones
+uv run python manage.py migrate
+
+# 6. Crea un usuario administrador
+uv run python manage.py createsuperuser
+
+# 7. Ejecuta el servidor de desarrollo
+uv run python manage.py runserver
+```
+
+**Nota:** En Windows, si PostgreSQL no esta en el PATH, usa la ruta completa:
+```powershell
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres
+```
+
+---
+
+### Verificar que funciona
+
+```bash
+# Health check (debe responder {"status":"ok"})
+curl http://127.0.0.1:8000/api/health/
+
+# PowerShell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/health/"
+```
+
+---
+
+## Testing
+
+### Ejecutar todas las pruebas
+
+```bash
+# Con Docker
+docker-compose exec web uv run python -m pytest
+
+# Sin Docker
+uv run python -m pytest
+```
+
+### Ejecutar pruebas de un modulo especifico
+
+```bash
+# Solo pruebas de usuarios
+uv run python -m pytest apps/users/tests.py -v
+
+# Solo pruebas de analytics
+uv run python -m pytest apps/analytics/tests.py -v
+```
+
+### Pruebas manuales con curl
+
+**1. Registrar un usuario nuevo:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","username":"testuser","password":"testpass123"}'
+```
+
+PowerShell:
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/auth/register/" `
+  -Method Post -ContentType "application/json" `
+  -Body '{"email":"test@test.com","username":"testuser","password":"testpass123"}'
+```
+
+**2. Iniciar sesion y obtener token:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@insightboard.com","password":"admin123"}'
+```
+
+PowerShell:
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/auth/login/" `
+  -Method Post -ContentType "application/json" `
+  -Body '{"email":"admin@insightboard.com","password":"admin123"}'
+```
+
+**3. Crear un evento (reemplaza TOKEN con el obtenido arriba):**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"source":"web","event_type":"click","payload":{"page":"home"}}'
+```
+
+**4. Obtener resumen de metricas:**
+
+```bash
+curl -X GET http://127.0.0.1:8000/api/metrics/summary/ \
+  -H "Authorization: Bearer TOKEN"
+```
+
+**5. Crear un reporte:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/reports/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"name":"Reporte de prueba","metric_type":"events_count","dimensions":["source"],"filters":{}}'
+```
+
+### Pruebas automatizadas (futuro)
+
+El proyecto actualmente no tiene tests unitarios. Para agregar pruebas:
+
+```bash
+# Instalar pytest (ya esta en requirements.txt)
+uv add pytest pytest-django
+
+# Ejecutar todas las pruebas
+uv run pytest -v
+
+# Ejecutar solo pruebas de un archivo
+uv run pytest apps/users/tests.py -v
+uv run pytest apps/analytics/tests.py -v
+uv run pytest apps/analytics/api_tests.py -v
+```
+
+Estructura de tests:
+```
+apps/
+├── analytics/
+│   ├── tests.py        # Pruebas de modelos (DataSource, Event, DailyMetric, SavedReport)
+│   └── api_tests.py    # Pruebas de endpoints API (register, login, events, metrics)
+├── users/
+│   └── tests.py        # Pruebas de modelo User
+conftest.py             # Configuracion de pytest
 ```
 
 ---
