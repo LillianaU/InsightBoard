@@ -1,8 +1,10 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as static_serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,5 +17,15 @@ urlpatterns = [
     path('', include('apps.core.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+FRONTEND_DIR = os.path.join(settings.BASE_DIR, 'frontend')
+
+frontend_urlpatterns = [
+    re_path(r'^(?P<path>login\.html)$', static_serve, {'document_root': FRONTEND_DIR}),
+    re_path(r'^(?P<path>index\.html)$', static_serve, {'document_root': FRONTEND_DIR}),
+    re_path(r'^(?P<path>events\.html)$', static_serve, {'document_root': FRONTEND_DIR}),
+    re_path(r'^(?P<path>reports\.html)$', static_serve, {'document_root': FRONTEND_DIR}),
+    re_path(r'^css/(?P<path>.*)$', static_serve, {'document_root': os.path.join(FRONTEND_DIR, 'css')}),
+    re_path(r'^js/(?P<path>.*)$', static_serve, {'document_root': os.path.join(FRONTEND_DIR, 'js')}),
+]
+
+urlpatterns = frontend_urlpatterns + urlpatterns

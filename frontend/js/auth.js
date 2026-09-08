@@ -1,5 +1,7 @@
 const AUTH = {
-    API_URL: 'http://127.0.0.1:8000/api',
+    API_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://127.0.0.1:8000/api'
+        : window.location.origin + '/api',
 
     getToken() {
         return localStorage.getItem('token');

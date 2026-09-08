@@ -4,6 +4,16 @@ Plataforma de analitica que permite recolectar datos, generar reportes personali
 
 ---
 
+## Demo en vivo
+
+**https://insightboard-gf27.onrender.com/**
+
+Credenciales:
+- Email: `admin@insightboard.com`
+- Contrasena: `admin123`
+
+---
+
 ## Tutoriales
 
 Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutoriales](./tutorials/README.md)**.
@@ -46,14 +56,46 @@ Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutori
 
 ---
 
+## Estructura del proyecto
+
+```
+InsightBoard/
+├── config/                  # Configuracion de Django
+│   ├── settings/            # Ajustes del proyecto
+│   ├── urls.py              # Rutas de la API
+│   ├── celery_app.py        # Tareas en segundo plano
+│   ├── wsgi.py              # Servidor web
+│   └── asgi.py              # Servidor asincrono
+├── apps/                    # Aplicaciones Django
+│   ├── users/               # Manejo de usuarios
+│   ├── analytics/           # Logica de analitica
+│   └── core/                # Utilidades generales
+├── frontend/                # Paginas web
+│   ├── login.html           # Pagina de login
+│   ├── index.html           # Dashboard principal
+│   ├── events.html          # Registro de eventos
+│   ├── reports.html         # Reportes personalizados
+│   ├── css/style.css        # Estilos
+│   └── js/                  # JavaScript
+├── tutorials/               # Guia de tutoriales
+├── docker-compose.yml       # Configuracion Docker
+├── Dockerfile               # imagen Docker
+├── pyproject.toml           # Dependencias Python
+└── manage.py                # Comando de gestion
+```
+
+---
+
 ## Levantar el proyecto
+
+### Con Docker (recomendado)
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/tu-usuario/InsightBoard.git
+git clone https://github.com/LillianaU/InsightBoard.git
 cd InsightBoard
 
-# 2. Levanta los servicios con Docker Compose
+# 2. Levanta los servicios
 docker-compose up -d
 
 # 3. Aplica migraciones
@@ -62,10 +104,30 @@ docker-compose exec web uv run python manage.py migrate
 # 4. Crea un superusuario
 docker-compose exec web uv run python manage.py createsuperuser
 
-# 5. Abre el navegador en:
-#    - Frontend: http://localhost:8080
-#    - API Docs: http://127.0.0.1:8000/api/docs/
-#    - Admin: http://127.0.0.1:8000/admin/
+# 5. Abre el navegador
+# Login: http://127.0.0.1:8000/login.html
+# Dashboard: http://127.0.0.1:8000/index.html
+# API Docs: http://127.0.0.1:8000/api/docs/
+# Admin: http://127.0.0.1:8000/admin/
+```
+
+### Sin Docker
+
+```bash
+# 1. Instala dependencias
+pip install -r requirements.txt
+
+# 2. Configura la base de datos (necesitas PostgreSQL corriendo)
+# Editar config/settings/base.py con tus credenciales
+
+# 3. Aplica migraciones
+python manage.py migrate
+
+# 4. Crea superusuario
+python manage.py createsuperuser
+
+# 5. Ejecuta el servidor
+python manage.py runserver
 ```
 
 ---
@@ -78,59 +140,77 @@ docker-compose exec web uv run python manage.py createsuperuser
 
 ---
 
-## Frontend
+## Paginas del frontend
 
-El frontend esta construido con **Bootstrap 5** y **Chart.js**. Incluye:
-
-- **Dashboard** (`frontend/index.html`) - Estadisticas generales y graficos
-- **Eventos** (`frontend/events.html`) - Formulario para registrar eventos
-- **Reportes** (`frontend/reports.html`) - Crear y visualizar reportes personalizados
-
-Para abrir el frontend:
-
-```bash
-cd frontend
-python -m http.server 8080
-```
+| Pagina | URL | Descripcion |
+|--------|-----|-------------|
+| Login | `/login.html` | Iniciar sesion |
+| Dashboard | `/index.html` | Estadisticas y graficos |
+| Eventos | `/events.html` | Registrar eventos |
+| Reportes | `/reports.html` | Crear reportes |
+| API Docs | `/api/docs/` | Documentacion Swagger |
+| Admin | `/admin/` | Panel de administracion |
 
 ---
 
 ## Endpoints principales
 
-| Metodo | Endpoint | Descripcion |
-|--------|----------|-------------|
-| POST | `/api/events/ingest/` | Recibir nuevos datos |
-| GET | `/api/events/list/` | Listar eventos |
-| POST | `/api/events/csv/` | Importar CSV |
-| GET | `/api/metrics/summary/` | Resumen general |
-| GET | `/api/metrics/timeseries/` | Datos para graficos de linea |
-| GET | `/api/metrics/breakdown/` | Datos agrupados (barras/pie) |
-| GET | `/api/metrics/heatmap/` | Datos para heatmap |
-| POST | `/api/metrics/refresh/` | Refrescar vista materializada |
-| POST | `/api/reports/` | Crear reporte personalizado |
-| GET | `/api/reports/{id}/` | Detalle de reporte |
-| GET | `/api/docs/` | Swagger UI |
-| GET | `/api/health/` | Health check |
+| Metodo | Endpoint | Descripcion | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/register/` | Crear cuenta | No |
+| POST | `/api/auth/login/` | Iniciar sesion | No |
+| GET | `/api/auth/me/` | Usuario actual | JWT |
+| POST | `/api/events/ingest/` | Crear evento | No |
+| POST | `/api/events/csv/` | Importar CSV | No |
+| GET | `/api/events/list/` | Listar eventos | JWT |
+| GET/POST | `/api/events/sources/` | Fuentes de datos | JWT |
+| GET | `/api/metrics/summary/` | Resumen general | JWT |
+| GET | `/api/metrics/timeseries/` | Datos para graficos | JWT |
+| GET | `/api/metrics/breakdown/` | Datos agrupados | JWT |
+| GET | `/api/metrics/heatmap/` | Heatmap | JWT |
+| POST | `/api/metrics/refresh/` | Refrescar metricas | JWT |
+| GET/POST | `/api/reports/` | Reportes guardados | JWT |
+| GET/PUT/DELETE | `/api/reports/<id>/` | Detalle reporte | JWT |
+| GET | `/api/docs/` | Swagger UI | No |
+| GET | `/api/health/` | Health check | No |
+
+---
+
+## Variables de entorno
+
+| Variable | Descripcion | Ejemplo |
+|----------|-------------|---------|
+| `DATABASE_URL` | URL de PostgreSQL | `postgres://user:pass@host:5432/db` |
+| `DJANGO_SECRET_KEY` | Clave secreta | `mi-clave-secreta-123` |
+| `DEBUG` | Modo desarrollo | `True` o `False` |
+| `ALLOWED_HOSTS` | Dominios permitidos | `localhost,127.0.0.1` |
+| `REDIS_URL` | URL de Redis | `redis://redis:6379/0` |
+
+---
+
+## Desplegar en Render
+
+1. Sube el codigo a GitHub
+2. En Render, crea un **Web Service** desde tu repositorio
+3. Agrega un servicio **PostgreSQL**
+4. Configura las variables de entorno
+5. Render desplegara automaticamente
 
 ---
 
 ## Solucion de problemas
 
 ### "No puedo acceder al frontend"
-Sirve el frontend con un servidor local:
-```bash
-cd frontend
-python -m http.server 8080
-```
+Asegurate de que el backend este corriendo y accede a `/login.html`
 
 ### "Error de conexion en el login"
-Asegurate de que el backend este corriendo:
-```bash
-docker-compose ps
-```
+Verifica que el backend este en `/api/` y que CORS este habilitado
 
-### "No veo el login"
-Abre directamente: `frontend/login.html` o `http://localhost:8080/login.html`
+### "Page not found (404)"
+Las URLs validas son: `/login.html`, `/index.html`, `/api/docs/`, `/admin/`
+
+### "Password hunter2 no es valida"
+La contrasena de demo es `admin123`, no `hunter2`
 
 ---
 
