@@ -234,7 +234,83 @@ uv run pytest apps/analytics/tests.py::DataSourceModelTest::test_event_count_sta
 
 ---
 
-## Paso 4: Prueba de Swagger
+## Paso 4: Casos de uso reales
+
+InsightBoard puede usarse para varios propositos. Aqui hay ejemplos practicos:
+
+### Caso 1: Analitica de tienda online
+
+**Problema:** Quieres saber que productos son mas vendidos.
+
+**Solucion:**
+1. Crea eventos de compra:
+```bash
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -H "Content-Type: application/json" \
+  -d '{"source_name":"tienda","event_type":"compra","payload":{"producto":"camisa","precio":25}}'
+```
+
+2. Ve al dashboard para ver graficos de ventas por producto.
+
+### Caso 2: Tracking de sitio web
+
+**Problema:** Quieres saber que paginas visitan los usuarios.
+
+**Solucion:**
+1. Crea eventos de visita:
+```bash
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -H "Content-Type: application/json" \
+  -d '{"source_name":"web","event_type":"visita","payload":{"pagina":"/productos"}}'
+```
+
+2. Usa el endpoint de timeseries para ver trafico por dia.
+
+### Caso 3: Reportes para el jefe
+
+**Problema:** Tu jefe necesita un reporte semanal de actividad.
+
+**Solucion:**
+1. Ve a http://localhost:8000/reports.html
+2. Selecciona "Metricas por semana"
+3. Exporta los datos como CSV
+4. Envia el archivo por email
+
+### Caso 4: Monitoreo de aplicacion movil
+
+**Problema:** Quieres saber cuando los usuarios tienen errores.
+
+**Solucion:**
+1. Crea eventos de error:
+```bash
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -H "Content-Type: application/json" \
+  -d '{"source_name":"app","event_type":"error","payload":{"stacktrace":"NullPointer at line 42"}}'
+```
+
+2. Filtra por event_type="error" en el dashboard.
+
+### Caso 5: A/B Testing
+
+**Problema:** Quieres saber que version de una pagina convierte mas.
+
+**Solucion:**
+1. Crea eventos con variante:
+```bash
+# Variante A
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -d '{"source_name":"web","event_type":"conversion","payload":{"variant":"A","page":"checkout"}}'
+
+# Variante B
+curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
+  -d '{"source_name":"web","event_type":"conversion","payload":{"variant":"B","page":"checkout"}}'
+```
+
+2. Compara metricas por variante en el dashboard.
+
+---
+
+## Paso 5: Prueba de Swagger
 
 1. Ve a http://127.0.0.1:8000/api/docs/
 2. Haz clic en **"Authorize"** (arriba a la derecha)
