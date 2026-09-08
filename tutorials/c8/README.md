@@ -159,7 +159,82 @@ python -m http.server 8080
 
 ---
 
-## Paso 3: Prueba de Swagger
+## Paso 3: Pruebas automatizadas con pytest
+
+Las pruebas automatizadas verifican que el codigo funciona sin errores. Se ejecutan con un solo comando.
+
+### 3.1 Instalar pytest
+
+```bash
+uv add pytest pytest-django
+```
+
+### 3.2 Ejecutar todas las pruebas
+
+```bash
+uv run pytest -v
+```
+
+**Resultado esperado:** Todas las pruebas en verde (PASSED).
+
+### 3.3 Ejecutar pruebas por modulo
+
+```bash
+# Solo pruebas de usuarios
+uv run pytest apps/users/tests.py -v
+
+# Solo pruebas de modelos de analytics
+uv run pytest apps/analytics/tests.py -v
+
+# Solo pruebas de API
+uv run pytest apps/analytics/api_tests.py -v
+```
+
+### 3.4 Que verifican las pruebas
+
+| Archivo | Que prueba |
+|---------|-----------|
+| `apps/users/tests.py` | Crear usuario, usuario super, email unico |
+| `apps/analytics/tests.py` | Modelos DataSource, Event, DailyMetric, SavedReport |
+| `apps/analytics/api_tests.py` | Endpoints: register, login, events, metrics |
+
+### 3.5 Ejemplo de una prueba
+
+```python
+# apps/users/tests.py
+def test_create_user(self):
+    user = User.objects.create_user(
+        email="test@test.com",
+        username="testuser",
+        password="testpass123"
+    )
+    self.assertEqual(user.email, "test@test.com")
+    self.assertTrue(user.check_password("testpass123"))
+```
+
+Esto verifica que al crear un usuario:
+- El email se guarda correctamente
+- La contrasena se encripta (no se guarda en texto plano)
+
+### 3.6 Agregar una prueba nueva
+
+Abre `apps/analytics/tests.py` y agrega:
+
+```python
+def test_event_count_starts_at_zero(self):
+    source = DataSource.objects.create(name="Test")
+    events = source.events.all()
+    self.assertEqual(events.count(), 0)
+```
+
+Luego ejecuta:
+```bash
+uv run pytest apps/analytics/tests.py::DataSourceModelTest::test_event_count_starts_at_zero -v
+```
+
+---
+
+## Paso 4: Prueba de Swagger
 
 1. Ve a http://127.0.0.1:8000/api/docs/
 2. Haz clic en **"Authorize"** (arriba a la derecha)
@@ -169,7 +244,7 @@ python -m http.server 8080
 
 ---
 
-## Paso 4: Lista de verificacion final
+## Paso 5: Lista de verificacion final
 
 Marca cada item con una X cuando lo verifiques:
 
@@ -186,11 +261,12 @@ Marca cada item con una X cuando lo verifiques:
 [ ] Puedes generar reportes
 [ ] Swagger muestra todos los endpoints
 [ ] Puedes cerrar sesion
+[ ] Pruebas automatizadas pasan (uv run pytest -v)
 ```
 
 ---
 
-## Paso 5: Desplegar en la nube
+## Paso 6: Desplegar en la nube
 
 > **Requisito previo:** el codigo debe estar en un repositorio de GitHub.
 > ```bash
@@ -268,7 +344,7 @@ Marca cada item con una X cuando lo verifiques:
 
 ---
 
-## Paso 6: Comandos utiles
+## Paso 7: Comandos utiles
 
 | Comando | Que hace |
 |---------|----------|
@@ -279,6 +355,9 @@ Marca cada item con una X cuando lo verifiques:
 | `docker-compose exec web bash` | Entrar al servidor |
 | `docker-compose exec web uv run python manage.py migrate` | Aplicar migraciones |
 | `docker-compose exec web uv run python manage.py createsuperuser` | Crear admin |
+| `uv run pytest -v` | Ejecutar todas las pruebas |
+| `uv run pytest apps/users/tests.py -v` | Pruebas de usuarios |
+| `uv run pytest apps/analytics/api_tests.py -v` | Pruebas de API |
 
 ---
 
