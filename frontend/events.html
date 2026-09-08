@@ -196,7 +196,7 @@
             PRODUCTS.forEach(([name, price]) => {
                 const opt = document.createElement('option');
                 opt.value = name;
-                opt.textContent = `${name} — $${price}`;
+                opt.textContent = `${name} - $${price}`;
                 sel.appendChild(opt);
             });
         })();
@@ -226,18 +226,28 @@
         function addPayloadRow(name = '', value = '') {
             const row = document.createElement('div');
             row.className = 'payload-row';
-            row.innerHTML = `
-                <input type="text" class="form-control" placeholder="Nombre del dato" value="${escapeAttr(name)}">
-                <input type="text" class="form-control" placeholder="Valor" value="${escapeAttr(value)}">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-remove" onclick="this.closest('.payload-row').remove()">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            document.getElementById('payloadRows').appendChild(row);
-        }
+            const inputName = document.createElement('input');
+            inputName.type = 'text';
+            inputName.className = 'form-control';
+            inputName.placeholder = 'Nombre del dato';
+            inputName.value = name;
 
-        function escapeAttr(str) {
-            return String(str).replace(/"/g, '&quot;');
+            const inputValue = document.createElement('input');
+            inputValue.type = 'text';
+            inputValue.className = 'form-control';
+            inputValue.placeholder = 'Valor';
+            inputValue.value = value;
+
+            const btnRemove = document.createElement('button');
+            btnRemove.type = 'button';
+            btnRemove.className = 'btn btn-sm btn-outline-danger btn-remove';
+            btnRemove.innerHTML = '<i class="bi bi-trash"></i>';
+            btnRemove.onclick = function() { row.remove(); };
+
+            row.appendChild(inputName);
+            row.appendChild(inputValue);
+            row.appendChild(btnRemove);
+            document.getElementById('payloadRows').appendChild(row);
         }
 
         function buildPayload() {
@@ -254,7 +264,7 @@
         function showAlert(message, type) {
             const alert = document.getElementById('formAlert');
             alert.className = `alert alert-${type} mt-3`;
-            alert.innerHTML = message;
+            alert.textContent = message;
             alert.style.display = 'block';
             setTimeout(() => { alert.style.display = 'none'; }, 3000);
         }
@@ -265,15 +275,18 @@
                 const tbody = document.getElementById('eventsTable');
 
                 if (data.results && data.results.length > 0) {
-                    tbody.innerHTML = data.results.map(event => `
-                        <tr>
+                    tbody.innerHTML = data.results.map(event => {
+                        const eventType = escapeHtml(event.event_type || '');
+                        const sourceName = escapeHtml(event.source ? event.source.name : '-');
+                        const payload = escapeHtml(JSON.stringify(event.payload).substring(0, 30));
+                        return `<tr>
                             <td>${event.id}</td>
-                            <td><span class="badge bg-primary">${event.event_type}</span></td>
-                            <td>${event.source ? event.source.name : '-'}</td>
-                            <td><code>${JSON.stringify(event.payload).substring(0, 30)}...</code></td>
+                            <td><span class="badge bg-primary">${eventType}</span></td>
+                            <td>${sourceName}</td>
+                            <td><code>${payload}...</code></td>
                             <td>${formatDate(event.created_at)}</td>
-                        </tr>
-                    `).join('');
+                        </tr>`;
+                    }).join('');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay eventos</td></tr>';
                 }

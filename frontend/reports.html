@@ -177,7 +177,7 @@
         function showAlert(message, type) {
             const alert = document.getElementById('reportAlert');
             alert.className = `alert alert-${type} mt-3`;
-            alert.innerHTML = message;
+            alert.textContent = message;
             alert.style.display = 'block';
             setTimeout(() => { alert.style.display = 'none'; }, 3000);
         }
@@ -219,20 +219,24 @@
                 const tbody = document.getElementById('savedReports');
 
                 if (data.results && data.results.length > 0) {
-                    tbody.innerHTML = data.results.map(report => `
-                        <tr>
-                            <td>${report.name}</td>
-                            <td>${report.config.chart_type || '-'}</td>
-                            <td>${report.config.dimension || '-'}</td>
-                            <td>${report.config.days || '-'}</td>
+                    tbody.innerHTML = data.results.map(report => {
+                        const name = escapeHtml(report.name || '');
+                        const chartType = escapeHtml(report.config.chart_type || '-');
+                        const dimension = escapeHtml(report.config.dimension || '-');
+                        const days = report.config.days || '-';
+                        return `<tr>
+                            <td>${name}</td>
+                            <td>${chartType}</td>
+                            <td>${dimension}</td>
+                            <td>${days}</td>
                             <td>${formatDate(report.created_at)}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="alert('Próximamente: ver reporte')">
+                                <button class="btn btn-sm btn-outline-primary" onclick="alert('Proximamente: ver reporte')">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </td>
-                        </tr>
-                    `).join('');
+                        </tr>`;
+                    }).join('');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay reportes guardados</td></tr>';
                 }
@@ -266,7 +270,7 @@
         }
 
         function exportPDF() {
-            alert('Exportación a PDF: próximamente. Por ahora usa CSV.');
+            alert('Exportacion a PDF: proximamente. Por ahora usa CSV.');
         }
 
         document.getElementById('reportDimension').addEventListener('change', updatePreview);

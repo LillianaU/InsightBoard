@@ -1,5 +1,4 @@
-from django.urls import path, include
-from . import metric_urls
+from django.urls import path
 from . import views
 
 report_urlpatterns = [
@@ -7,4 +6,6 @@ report_urlpatterns = [
     path('<int:pk>/', views.SavedReportDetailView.as_view(), name='savedreport-detail'),
 ]
 
-urlpatterns = report_urlpatterns
+urlpatterns = [
+    path('reports/', include(report_urlpatterns)),
+]

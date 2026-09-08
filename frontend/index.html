@@ -149,31 +149,18 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script>
-        AUTH.requireAuth();
-        AUTH.updateNavbar();
-    </script>
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? 'http://127.0.0.1:8000/api'
-                : window.location.origin + '/api';
-            const token = localStorage.getItem('token');
-
-            function getHeaders() {
-                const headers = {'Content-Type': 'application/json'};
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-                return headers;
-            }
+            AUTH.requireAuth();
+            AUTH.updateNavbar();
 
             async function loadStats() {
                 try {
                     const data = await AUTH.apiGet('/metrics/summary/?days=30');
-
                     document.getElementById('total-events').textContent = data.total_events.toLocaleString();
                     document.getElementById('total-sources').textContent = data.active_sources.toLocaleString();
                     document.getElementById('total-users').textContent = data.active_users.toLocaleString();
                 } catch (error) {
-                    console.error('Error cargando estadísticas:', error);
+                    console.error('Error cargando estadisticas:', error);
                     document.getElementById('total-events').textContent = '0';
                     document.getElementById('total-sources').textContent = '0';
                     document.getElementById('total-users').textContent = '0';
@@ -183,7 +170,6 @@
             async function loadCharts() {
                 try {
                     const timeseriesData = await AUTH.apiGet('/metrics/timeseries/?days=30');
-
                     const labels = timeseriesData.map(d => d.day);
                     const values = timeseriesData.map(d => d.count);
 
@@ -208,7 +194,6 @@
                     });
 
                     const breakdownData = await AUTH.apiGet('/metrics/breakdown/?dimension=event_type&days=30');
-
                     const typeLabels = breakdownData.map(d => d.event_type);
                     const typeValues = breakdownData.map(d => d.count);
 
@@ -224,7 +209,7 @@
                         options: { responsive: true }
                     });
                 } catch (error) {
-                    console.error('Error cargando gráficos:', error);
+                    console.error('Error cargando graficos:', error);
                 }
             }
 
@@ -234,13 +219,16 @@
                     const tbody = document.getElementById('recent-events');
 
                     if (data.results && data.results.length > 0) {
-                        tbody.innerHTML = data.results.map(event => `
-                            <tr>
-                                <td><span class="badge bg-primary">${event.event_type}</span></td>
-                                <td>${event.source ? event.source.name : '-'}</td>
-                                <td>${new Date(event.created_at).toLocaleDateString()}</td>
-                            </tr>
-                        `).join('');
+                        tbody.innerHTML = data.results.map(event => {
+                            const eventType = escapeHtml(event.event_type || '');
+                            const sourceName = escapeHtml(event.source ? event.source.name : '-');
+                            const date = new Date(event.created_at).toLocaleDateString();
+                            return `<tr>
+                                <td><span class="badge bg-primary">${eventType}</span></td>
+                                <td>${sourceName}</td>
+                                <td>${date}</td>
+                            </tr>`;
+                        }).join('');
                     } else {
                         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay eventos recientes</td></tr>';
                     }

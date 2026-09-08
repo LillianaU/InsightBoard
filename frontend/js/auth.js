@@ -13,7 +13,14 @@ const AUTH = {
     },
 
     isAuthenticated() {
-        return !!this.getToken();
+        const token = this.getToken();
+        if (!token) return false;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.exp * 1000 > Date.now();
+        } catch {
+            return false;
+        }
     },
 
     getHeaders() {
@@ -23,6 +30,12 @@ const AUTH = {
             headers['Authorization'] = `Bearer ${token}`;
         }
         return headers;
+    },
+
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     },
 
     async apiGet(endpoint) {
@@ -72,9 +85,10 @@ const AUTH = {
         const navUser = document.getElementById('nav-user');
         if (navUser) {
             if (user) {
+                const email = this.escapeHtml(user.email || user.username || '');
                 navUser.innerHTML = `
                     <span class="navbar-text">
-                        <i class="bi bi-person-circle me-1"></i>${user.email || user.username}
+                        <i class="bi bi-person-circle me-1"></i>${email}
                     </span>
                     <button class="btn btn-sm btn-outline-light ms-2" onclick="AUTH.logout()">
                         <i class="bi bi-box-arrow-right me-1"></i>Salir
@@ -83,7 +97,7 @@ const AUTH = {
             } else {
                 navUser.innerHTML = `
                     <a href="login.html" class="btn btn-sm btn-outline-light">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesion
                     </a>
                 `;
             }

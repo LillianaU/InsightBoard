@@ -14,21 +14,22 @@ Credenciales:
 
 ---
 
-## Tutoriales
+## Guia completa de construccion
 
 Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutoriales](./tutorials/README.md)**.
 
-| Cap | Tema | Tiempo |
-|-----|------|--------|
+| Cap | Titulo | Tiempo |
+|-----|--------|--------|
 | [C0](./tutorials/c0/README.md) | Que es InsightBoard | 10 min |
-| [C1](./tutorials/c1/README.md) | Instalar herramientas | 20 min |
+| [C1](./tutorials/c1/README.md) | Preparar tu computadora | 20 min |
 | [C2](./tutorials/c2/README.md) | Docker y base de datos | 25 min |
-| [C3](./tutorials/c3/README.md) | Crear proyecto Django | 35 min |
+| [C3](./tutorials/c3/README.md) | Crear el proyecto Django | 35 min |
 | [C4](./tutorials/c4/README.md) | Modelos de base de datos | 30 min |
 | [C5](./tutorials/c5/README.md) | API REST con DRF | 40 min |
 | [C6](./tutorials/c6/README.md) | Frontend y dashboards | 35 min |
 | [C7](./tutorials/c7/README.md) | Autenticacion JWT | 25 min |
-| [C8](./tutorials/c8/README.md) | Probar y deploy | 20 min |
+| [C8](./tutorials/c8/README.md) | Probar el proyecto | 20 min |
+| [C9](./tutorials/c9/README.md) | Publicar en Render | 30 min |
 
 ---
 
@@ -41,8 +42,21 @@ Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutori
 | Documentacion API | drf-spectacular (Swagger/OpenAPI) | Documentacion automatica |
 | Frontend | Bootstrap 5 + Chart.js | Interfaz responsive y graficos |
 | Autenticacion | JWT (SimpleJWT) | Estandar moderno |
-| Exportacion | openpyxl / ReportLab / csv | Excel, PDF y CSV |
 | Container | Docker + Docker Compose | Empaquetado portable |
+| Deploy | Render | Hosting gratuito con PostgreSQL |
+
+---
+
+## Capas de seguridad (8)
+
+1. **SECRET_KEY** - Nunca hardcodeada, obligatoria via variable de entorno
+2. **DEBUG** - Por defecto False en produccion
+3. **ALLOWED_HOSTS** - Solo dominios explicitos configurados
+4. **CORS** - Solo origenes permitidos (no permite todos)
+5. **Rate limiting** - Throttling en endpoints de ingestion (30/hora anon, 1000/hora autenticado)
+6. **JWT Seguro** - Tokens con rotacion y blacklist
+7. **XSS Protection** - Frontend usa textContent en vez de innerHTML
+8. **SQL Injection** - Django ORM previene inyeccion SQL automaticamente
 
 ---
 
@@ -51,38 +65,8 @@ Para aprender a construir InsightBoard desde cero, consulta la **[Guia de tutori
 1. **Recoleccion de datos** - Endpoint para recibir eventos con JSONField, importacion de CSV
 2. **Dashboards interactivos** - Graficos de lineas, barras, pasteles/donuts con Chart.js
 3. **Reportes personalizados** - Crear reportes eligiendo metricas, dimensiones y filtros
-4. **Exportacion** - Excel, PDF y CSV con graficos incluidos
+4. **Exportacion** - CSV con datos agrupados
 5. **Vistas materializadas en PostgreSQL** - Rendimiento optimizado para metricas
-
----
-
-## Estructura del proyecto
-
-```
-InsightBoard/
-├── config/                  # Configuracion de Django
-│   ├── settings/            # Ajustes del proyecto
-│   ├── urls.py              # Rutas de la API
-│   ├── celery_app.py        # Tareas en segundo plano
-│   ├── wsgi.py              # Servidor web
-│   └── asgi.py              # Servidor asincrono
-├── apps/                    # Aplicaciones Django
-│   ├── users/               # Manejo de usuarios
-│   ├── analytics/           # Logica de analitica
-│   └── core/                # Utilidades generales
-├── frontend/                # Paginas web
-│   ├── login.html           # Pagina de login
-│   ├── index.html           # Dashboard principal
-│   ├── events.html          # Registro de eventos
-│   ├── reports.html         # Reportes personalizados
-│   ├── css/style.css        # Estilos
-│   └── js/                  # JavaScript
-├── tutorials/               # Guia de tutoriales
-├── docker-compose.yml       # Configuracion Docker
-├── Dockerfile               # imagen Docker
-├── pyproject.toml           # Dependencias Python
-└── manage.py                # Comando de gestion
-```
 
 ---
 
@@ -95,16 +79,19 @@ InsightBoard/
 git clone https://github.com/LillianaU/InsightBoard.git
 cd InsightBoard
 
-# 2. Levanta los servicios
+# 2. Copia el archivo de variables de entorno
+cp .env.example .env
+
+# 3. Levanta los servicios
 docker-compose up -d
 
-# 3. Aplica migraciones
+# 4. Aplica migraciones
 docker-compose exec web uv run python manage.py migrate
 
-# 4. Crea un superusuario
+# 5. Crea superusuario
 docker-compose exec web uv run python manage.py createsuperuser
 
-# 5. Abre el navegador
+# 6. Abre el navegador
 # Login: http://127.0.0.1:8000/login.html
 # Dashboard: http://127.0.0.1:8000/index.html
 # API Docs: http://127.0.0.1:8000/api/docs/
@@ -117,8 +104,8 @@ docker-compose exec web uv run python manage.py createsuperuser
 # 1. Instala dependencias
 pip install -r requirements.txt
 
-# 2. Configura la base de datos (necesitas PostgreSQL corriendo)
-# Editar config/settings/base.py con tus credenciales
+# 2. Configura PostgreSQL manualmente
+# Editar config/settings/base.py
 
 # 3. Aplica migraciones
 python manage.py migrate
@@ -181,10 +168,11 @@ python manage.py runserver
 | Variable | Descripcion | Ejemplo |
 |----------|-------------|---------|
 | `DATABASE_URL` | URL de PostgreSQL | `postgres://user:pass@host:5432/db` |
-| `DJANGO_SECRET_KEY` | Clave secreta | `mi-clave-secreta-123` |
+| `DJANGO_SECRET_KEY` | Clave secreta (obligatoria) | `mi-clave-secreta-123` |
+| `DJANGO_SETTINGS_MODULE` | Modulo de settings | `config.settings.production` |
 | `DEBUG` | Modo desarrollo | `True` o `False` |
 | `ALLOWED_HOSTS` | Dominios permitidos | `localhost,127.0.0.1` |
-| `REDIS_URL` | URL de Redis | `redis://redis:6379/0` |
+| `CORS_ALLOWED_ORIGINS` | Origenes CORS permitidos | `http://localhost:3000` |
 
 ---
 
@@ -195,6 +183,8 @@ python manage.py runserver
 3. Agrega un servicio **PostgreSQL**
 4. Configura las variables de entorno
 5. Render desplegara automaticamente
+
+Para instrucciones detalladas, ve el [Capitulo 9: Publicar en Render](./tutorials/c9/README.md).
 
 ---
 
@@ -209,8 +199,8 @@ Verifica que el backend este en `/api/` y que CORS este habilitado
 ### "Page not found (404)"
 Las URLs validas son: `/login.html`, `/index.html`, `/api/docs/`, `/admin/`
 
-### "Password hunter2 no es valida"
-La contrasena de demo es `admin123`, no `hunter2`
+### "Password validation failed"
+La contrasena debe tener 8+ caracteres
 
 ---
 

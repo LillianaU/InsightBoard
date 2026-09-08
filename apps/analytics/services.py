@@ -1,9 +1,10 @@
-from django.db.models import Count, Sum, Avg, Min, Max, F, Q
+from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncHour, ExtractWeekDay
+from django.db import transaction
 from django.utils import timezone
-from datetime import timedelta, date
+from datetime import timedelta
 from typing import Dict, Any, List, Optional
-from .models import Event, DataSource, DailyMetric
+from .models import Event, DailyMetric
 
 
 def get_summary(days: int = 30) -> Dict[str, Any]:
@@ -86,6 +87,7 @@ def get_heatmap_data(days: int = 30) -> List[Dict[str, Any]]:
     )
 
 
+@transaction.atomic
 def build_materialized_view():
     DailyMetric.objects.all().delete()
     qs = Event.objects.annotate(day=TruncDate('created_at')).values('day', 'event_type')

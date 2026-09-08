@@ -7,12 +7,26 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-change-me-in-production')
+# ============================================================================
+# CAPA 1: SECRET KEY - Nunca hardcodeada en produccion
+# ============================================================================
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError('La variable DJANGO_SECRET_KEY no esta configurada')
 
+# ============================================================================
+# CAPA 2: DEBUG - Por defecto False en produccion
+# ============================================================================
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+# ============================================================================
+# CAPA 3: ALLOWED HOSTS - Solo dominios explicitos
+# ============================================================================
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# ============================================================================
+# CAPA 4: APPS INSTALADAS
+# ============================================================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -31,15 +45,18 @@ INSTALLED_APPS = [
     'apps.core',
 ]
 
+# ============================================================================
+# CAPA 5: MIDDLEWARE DE SEGURIDAD
+# ============================================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -63,6 +80,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+# ============================================================================
+# CAPA 6: BASE DE DATOS - Conexion segura
+# ============================================================================
 from urllib.parse import urlparse
 
 DATABASES = {}
@@ -76,6 +96,10 @@ if _db_url:
         'PASSWORD': _p.password,
         'HOST': _p.hostname,
         'PORT': _p.port or 5432,
+        'CONN_MAX_AGE': 600,
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 else:
     DATABASES['default'] = {
@@ -85,8 +109,12 @@ else:
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'CONN_MAX_AGE': 600,
     }
 
+# ============================================================================
+# VALIDADORES DE CONTRASENA
+# ============================================================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -94,18 +122,30 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# ============================================================================
+# INTERNACIONALIZACION
+# ============================================================================
 LANGUAGE_CODE = 'es-es'
 TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
+# ============================================================================
+# ARCHIVOS ESTATICOS
+# ============================================================================
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ============================================================================
+# MODELO DE USUARIO PERSONALIZADO
+# ============================================================================
 AUTH_USER_MODEL = 'users.User'
 
+# ============================================================================
+# CAPA 7: DJANGO REST FRAMEWORK - Autenticacion y permisos
+# ============================================================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -120,22 +160,43 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
 }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'InsightBoard API',
-    'DESCRIPTION': 'Plataforma de analítica con recolección de datos, reportes personalizados y visualizaciones D3.js',
+    'DESCRIPTION': 'Plataforma de analitica con recoleccion de datos, reportes personalizados y visualizaciones interactivas',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+# ============================================================================
+# CAPA 8: JWT - Tokens de autenticacion
+# ============================================================================
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# ============================================================================
+# CORS - Solo dominios permitidos
+# ============================================================================
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
 
+# ============================================================================
+# CELERY - Tareas en segundo plano
+# ============================================================================
 CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']

@@ -5,9 +5,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN adduser --disabled-password --gecos '' appuser
+
 WORKDIR /app
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.15 /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock ./
 
@@ -15,6 +17,10 @@ RUN uv sync --frozen --no-dev
 
 COPY . .
 
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
 EXPOSE 8000
 
-CMD uv run python manage.py migrate && uv run gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000}
+CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
