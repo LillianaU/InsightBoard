@@ -30,7 +30,7 @@ class EventIngestThrottle(AnonRateThrottle):
 class EventIngestView(generics.CreateAPIView):
     serializer_class = EventIngestSerializer
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     throttle_classes = [EventIngestThrottle]
 
     def create(self, request, *args, **kwargs):
