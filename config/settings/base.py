@@ -86,10 +86,12 @@ ASGI_APPLICATION = 'config.asgi.application'
 from urllib.parse import urlparse
 
 DATABASES = {}
+from urllib.parse import urlparse
+
 _db_url = os.getenv('DATABASE_URL')
 if _db_url:
     _p = urlparse(_db_url)
-    DATABASES['default'] = {
+    _db_kwargs = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': _p.path[1:],
         'USER': _p.username,
@@ -97,9 +99,19 @@ if _db_url:
         'HOST': _p.hostname,
         'PORT': _p.port or 5432,
         'CONN_MAX_AGE': 600,
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+    }
+    if _p.hostname and _p.hostname not in ('localhost', '127.0.0.1', 'db'):
+        _db_kwargs['OPTIONS'] = {'sslmode': 'require'}
+    DATABASES['default'] = _db_kwargs
+else:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'insightboard'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'CONN_MAX_AGE': 600,
     }
 else:
     DATABASES['default'] = {
