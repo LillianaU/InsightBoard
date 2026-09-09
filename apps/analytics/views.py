@@ -47,7 +47,7 @@ class EventIngestView(generics.CreateAPIView):
             source=source,
             event_type=data['event_type'],
             payload=data['payload'],
-            user_id=data.get('user_id')
+            user=request.user if request.user.is_authenticated else None
         )
 
         return Response(EventSerializer(event).data, status=status.HTTP_201_CREATED)

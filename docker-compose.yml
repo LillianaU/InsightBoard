@@ -86,6 +86,14 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "uv", "run", "python", "manage.py", "shell", "-c", "from django.db import connection; connection.ensure_connection()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
