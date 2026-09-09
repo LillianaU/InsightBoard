@@ -182,6 +182,54 @@
             setTimeout(() => { alert.style.display = 'none'; }, 3000);
         }
 
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('es-ES');
+        }
+
+        async function viewReport(id) {
+            try {
+                const report = await AUTH.apiGet(`/reports/${id}/`);
+                const config = report.config;
+                document.getElementById('reportName').value = report.name;
+                document.getElementById('reportType').value = config.chart_type;
+                document.getElementById('reportDimension').value = config.dimension;
+                document.getElementById('reportDays').value = config.days;
+                updatePreviewWithConfig(config);
+                showAlert('Reporte cargado: ' + report.name, 'success');
+            } catch (error) {
+                showAlert('Error al cargar reporte', 'danger');
+            }
+        }
+
+        async function updatePreviewWithConfig(config) {
+            const dimension = config.dimension;
+            const days = config.days;
+            const chartType = config.chart_type;
+            try {
+                const data = await AUTH.apiGet(`/metrics/breakdown/?dimension=${dimension}&days=${days}`);
+                const labels = data.map(d => d[dimension] || Object.values(d)[0]);
+                const values = data.map(d => d.count);
+                const ctx = document.getElementById('reportChart').getContext('2d');
+                if (currentChart) currentChart.destroy();
+                currentChart = new Chart(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cantidad',
+                            data: values,
+                            backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            } catch (error) {
+                console.error('Error preview:', error);
+            }
+        }
+
         async function updatePreview() {
             const dimension = document.getElementById('reportDimension').value;
             const days = document.getElementById('reportDays').value;
@@ -231,9 +279,9 @@
                             <td>${days}</td>
                             <td>${formatDate(report.created_at)}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="alert('Proximamente: ver reporte')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+<button class="btn btn-sm btn-outline-primary" onclick="viewReport(${report.id})">
+    <i class="bi bi-eye"></i>
+</button>
                             </td>
                         </tr>`;
                     }).join('');
