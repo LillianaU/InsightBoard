@@ -150,17 +150,36 @@ class EventCSVIngestView(generics.CreateAPIView):
 def generate_pdf_report(request):
     days = int(request.query_params.get('days', 30))
     dimension = request.query_params.get('dimension', 'event_type')
-    from .services import get_breakdown
+    from .services import get_breakdown, get_summary
+
+    user = request.user
     data = get_breakdown(dimension=dimension, days=days)
+    summary = get_summary(days=days)
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('ReportTitle', parent=styles['Title'], fontSize=18, spaceAfter=20)
+    title_style = ParagraphStyle('ReportTitle', parent=styles['Title'], fontSize=20, spaceAfter=10)
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, spaceAfter=10, textColor=colors.HexColor('#666666'))
     heading_style = ParagraphStyle('ReportHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=10)
+    body_style = ParagraphStyle('BodyText', parent=styles['Normal'], fontSize=10, spaceAfter=6)
+
     elements = []
     elements.append(Paragraph('Reporte InsightBoard', title_style))
-    elements.append(Paragraph(f'Dimension: {dimension} | Dias: {days}', heading_style))
+    elements.append(Paragraph(f'Generado por: {user.email} | Fecha: {timezone.now().strftime("%d/%m/%Y %H:%M")}', subtitle_style))
     elements.append(Spacer(1, 0.5*cm))
+
+    elements.append(Paragraph('Resumen Ejecutivo', heading_style))
+    elements.append(Paragraph(f'Total de Eventos: <b>{summary["total_events"]}</b>', body_style))
+    elements.append(Paragraph(f'Fuentes Activas: <b>{summary["active_sources"]}</b>', body_style))
+    elements.append(Paragraph(f'Usuarios Activos: <b>{summary["active_users"]}</b>', body_style))
+    elements.append(Paragraph(f'Eventos Top: <b>{len(summary["top_events"])}</b>', body_style))
+    elements.append(Spacer(1, 0.5*cm))
+
+    elements.append(Paragraph('Analisis por Dimension', heading_style))
+    elements.append(Paragraph(f'Dimension: {dimension} | Dias: {days}', body_style))
+    elements.append(Spacer(1, 0.3*cm))
+
     table_data = [[dimension.capitalize(), 'Cantidad']]
     for item in data:
         key = item.get(dimension, item.get('event_type', ''))
@@ -177,9 +196,10 @@ def generate_pdf_report(request):
     ]))
     elements.append(table)
     elements.append(Spacer(1, 1*cm))
-    elements.append(Paragraph(f'Total de registros: {len(data)}', styles['Normal']))
+    elements.append(Paragraph(f'Total de registros en esta dimension: {len(data)}', body_style))
+
     doc.build(elements)
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="reporte-insightboard.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="reporte-{user.email}-{days}d.pdf"'
     return response
