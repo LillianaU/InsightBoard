@@ -100,3 +100,18 @@ InsightBoard/
 ---
 
 **Empieza con el [Capitulo 0: Que es InsightBoard](./c0/README.md)**
+
+powershel
+uv venv
+
+uv sync
+uv run python manage.py migrate
+uv run python manage.py createsuperuser
+uv run python manage.py runserver
+
+
+docker-compose down -v
+docker volume rm insightboard_venv_data 2>$null
+docker-compose up -d --build
+docker-compose exec web uv run python manage.py migrate
+docker-compose exec web uv run python manage.py createsuperuser
