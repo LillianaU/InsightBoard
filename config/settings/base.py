@@ -192,7 +192,7 @@ SIMPLE_JWT = {
 # CORS - Solo dominios permitidos
 # ============================================================================
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')]
 
 # ============================================================================
 # CELERY - Tareas en segundo plano
