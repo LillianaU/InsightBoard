@@ -15,9 +15,12 @@ import csv
 import io
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 MAX_CSV_SIZE = 5 * 1024 * 1024  # 5MB
@@ -176,9 +179,31 @@ def generate_pdf_report(request):
     elements.append(Paragraph(f'Eventos Top: <b>{len(summary["top_events"])}</b>', body_style))
     elements.append(Spacer(1, 0.5*cm))
 
+    chart_img_buffer = io.BytesIO()
+    labels = [str(item.get(dimension, item.get('event_type', ''))) for item in data]
+    values = [item['count'] for item in data]
+    chart_type = 'bar' if len(data) > 1 else 'pie'
+    fig, ax = plt.subplots(figsize=(6, 4))
+    if chart_type == 'bar':
+        ax.bar(labels, values, color=['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'][:len(data)])
+        ax.set_title(f'{dimension.capitalize()} - {days} dias')
+        ax.set_ylabel('Cantidad')
+        ax.tick_params(axis='x', rotation=45)
+    else:
+        ax.pie(values, labels=labels, autopct='%1.1f%%', colors=['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'][:len(data)])
+        ax.set_title(f'{dimension.capitalize()} - {days} dias')
+    plt.tight_layout()
+    fig.savefig(chart_img_buffer, format='png', dpi=100)
+    chart_img_buffer.seek(0)
+    plt.close(fig)
+
     elements.append(Paragraph('Analisis por Dimension', heading_style))
     elements.append(Paragraph(f'Dimension: {dimension} | Dias: {days}', body_style))
     elements.append(Spacer(1, 0.3*cm))
+
+    chart_img = RLImage(chart_img_buffer, width=16*cm, height=11*cm)
+    elements.append(chart_img)
+    elements.append(Spacer(1, 0.5*cm))
 
     table_data = [[dimension.capitalize(), 'Cantidad']]
     for item in data:
@@ -196,7 +221,7 @@ def generate_pdf_report(request):
     ]))
     elements.append(table)
     elements.append(Spacer(1, 1*cm))
-    elements.append(Paragraph(f'Total de registros en esta dimension: {len(data)}', body_style))
+    elements.append(Paragraph(f'Total de registros: {len(data)}', body_style))
 
     doc.build(elements)
     buffer.seek(0)

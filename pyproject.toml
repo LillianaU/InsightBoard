@@ -17,6 +17,7 @@ dependencies = [
     "pytest>=8.0.0",
     "pytest-django>=4.8.0",
     "redis>=8.1.0",
+    "matplotlib>=3.9.0",
     "reportlab>=5.0.1",
 ]
 
