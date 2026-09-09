@@ -269,9 +269,27 @@
             }
         }
 
-        function exportPDF() {
-            alert('Exportacion a PDF: proximamente. Por ahora usa CSV.');
-        }
+async function exportPDF() {
+    const dimension = document.getElementById('reportDimension').value;
+    const days = document.getElementById('reportDays').value;
+    try {
+        const response = await fetch(`${AUTH.API_URL}/reports/pdf/?dimension=${dimension}&days=${days}`, {
+            headers: AUTH.getHeaders()
+        });
+        if (!response.ok) throw new Error('Error al generar PDF');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reporte-insightboard.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        alert('Error al exportar PDF');
+    }
+}
 
         document.getElementById('reportDimension').addEventListener('change', updatePreview);
         document.getElementById('reportDays').addEventListener('change', updatePreview);

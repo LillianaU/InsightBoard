@@ -6,12 +6,18 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.throttling import AnonRateThrottle
 from .models import Event, DataSource, SavedReport, DailyMetric
 from .serializers import EventSerializer, DataSourceSerializer, EventIngestSerializer, SavedReportSerializer
 import csv
 import io
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
 
 
 MAX_CSV_SIZE = 5 * 1024 * 1024  # 5MB
@@ -137,3 +143,43 @@ class EventCSVIngestView(generics.CreateAPIView):
         Event.objects.bulk_create(events, batch_size=500)
 
         return Response({'created': len(events)}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def generate_pdf_report(request):
+    days = int(request.query_params.get('days', 30))
+    dimension = request.query_params.get('dimension', 'event_type')
+    from .services import get_breakdown
+    data = get_breakdown(dimension=dimension, days=days)
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('ReportTitle', parent=styles['Title'], fontSize=18, spaceAfter=20)
+    heading_style = ParagraphStyle('ReportHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=10)
+    elements = []
+    elements.append(Paragraph('Reporte InsightBoard', title_style))
+    elements.append(Paragraph(f'Dimension: {dimension} | Dias: {days}', heading_style))
+    elements.append(Spacer(1, 0.5*cm))
+    table_data = [[dimension.capitalize(), 'Cantidad']]
+    for item in data:
+        key = item.get(dimension, item.get('event_type', ''))
+        table_data.append([str(key), str(item['count'])])
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f0f0f0')]),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 1*cm))
+    elements.append(Paragraph(f'Total de registros: {len(data)}', styles['Normal']))
+    doc.build(elements)
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte-insightboard.pdf"'
+    return response
