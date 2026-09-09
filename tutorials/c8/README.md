@@ -288,13 +288,17 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 4. Descarga el PDF que incluye:
    - Tu usuario logueado y fecha
    - Resumen ejecutivo (total eventos, fuentes activas, usuarios activos)
+   - **Grafico** (barras si hay muchos datos, pastel/torta si son pocos)
    - Tabla con los datos de la dimension seleccionada
+
+**Tipos de grafico en el PDF:**
+- **Barras** (bar): cuando hay muchos registros
+- **Pastel/Torta** (pie): cuando hay pocos registros (1 tipo de evento)
+- **Dona** (doughnut): variante del pastel
 
 **Endpoint API:** `GET /api/reports/pdf/?dimension=event_type&days=30` (requiere JWT)
 
----
-
-## Caso 4: Monitoreo de aplicacion movil
+---il
 
 **Problema:** Quieres saber cuando los usuarios tienen errores.
 
