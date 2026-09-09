@@ -273,10 +273,28 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 **Solucion:**
 1. Ve a http://localhost:8000/reports.html
 2. Selecciona "Metricas por semana"
-3. Exporta los datos como CSV
-4. Envia el archivo por email
+3. Haz clic en **CSV** para exportar datos
+4. Haz clic en **PDF** para generar un informe con resumen ejecutivo
+5. El PDF incluye tu usuario, resumen ejecutivo y tabla de datos
 
-### Caso 4: Monitoreo de aplicacion movil
+## Caso 6: Exportar reporte en PDF
+
+**Problema:** Necesitas un informe formal para enviar por email o imprimir.
+
+**Solucion:**
+1. Ve a http://localhost:8000/reports.html
+2. Crea un reporte con dimension y dias
+3. Haz clic en el boton **PDF** (icono de archivo)
+4. Descarga el PDF que incluye:
+   - Tu usuario logueado y fecha
+   - Resumen ejecutivo (total eventos, fuentes activas, usuarios activos)
+   - Tabla con los datos de la dimension seleccionada
+
+**Endpoint API:** `GET /api/reports/pdf/?dimension=event_type&days=30` (requiere JWT)
+
+---
+
+## Caso 4: Monitoreo de aplicacion movil
 
 **Problema:** Quieres saber cuando los usuarios tienen errores.
 
@@ -542,10 +560,9 @@ docker-compose up -d
 
 Ahora que tienes InsightBoard funcionando, puedes:
 
-1. **Agregar mas funcionalidades** - Exportar PDF, filtros avanzados, modo oscuro
-2. **Mejorar el frontend** - Agregar animaciones, mejorar el diseno
-3. **Crear tu propia app** - Usa lo que aprendiste para construir algo nuevo
-4. **Compartir** - Muestra tu proyecto a tus amigos o en tu portafolio
+1. **Mejorar el frontend** - Agregar animaciones, mejorar el diseno
+2. **Crear tu propia app** - Usa lo que aprendiste para construir algo nuevo
+3. **Compartir** - Muestra tu proyecto a tus amigos o en tu portafolio
 
 ---
 
