@@ -276,7 +276,10 @@ async function exportPDF() {
         const response = await fetch(`${AUTH.API_URL}/reports/pdf/?dimension=${dimension}&days=${days}`, {
             headers: AUTH.getHeaders()
         });
-        if (!response.ok) throw new Error('Error al generar PDF');
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${response.status}`);
+        }
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -286,8 +289,9 @@ async function exportPDF() {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        showAlert('PDF descargado correctamente', 'success');
     } catch (error) {
-        alert('Error al exportar PDF');
+        showAlert('Error al exportar PDF: ' + error.message, 'danger');
     }
 }
 
