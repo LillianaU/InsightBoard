@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ============================================================================
 # CAPA 1: SECRET KEY - Nunca hardcodeada en produccion
 # ============================================================================
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-clave-temporal-desarrollo')
 if not SECRET_KEY:
     raise ValueError('La variable DJANGO_SECRET_KEY no esta configurada')
 
