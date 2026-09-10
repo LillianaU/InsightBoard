@@ -36,7 +36,6 @@ services:
     volumes:
       - .:/app
       - venv_data:/app/.venv
-      - /app/.venv  # Esto evita que Docker pise o bloquee el .venv de tu máquina local
     ports:
       - "8000:8000"
     environment:
@@ -91,9 +90,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
 
 volumes:
   postgres_data:
