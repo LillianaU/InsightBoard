@@ -277,7 +277,7 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 4. Haz clic en **PDF** para generar un informe con resumen ejecutivo
 5. El PDF incluye tu usuario, resumen ejecutivo y tabla de datos
 
-## Caso 6: Exportar reporte en PDF
+## Caso 4: Exportar reporte en PDF
 
 **Problema:** Necesitas un informe formal para enviar por email o imprimir.
 
@@ -298,7 +298,9 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 
 **Endpoint API:** `GET /api/reports/pdf/?dimension=event_type&days=30` (requiere JWT)
 
----il
+---
+
+### Caso 5: Deteccion de errores
 
 **Problema:** Quieres saber cuando los usuarios tienen errores.
 
@@ -312,7 +314,7 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 
 2. Filtra por event_type="error" en el dashboard.
 
-### Caso 5: A/B Testing
+### Caso 6: A/B Testing
 
 **Problema:** Quieres saber que version de una pagina convierte mas.
 
@@ -567,6 +569,7 @@ Ahora que tienes InsightBoard funcionando, puedes:
 1. **Mejorar el frontend** - Agregar animaciones, mejorar el diseno
 2. **Crear tu propia app** - Usa lo que aprendiste para construir algo nuevo
 3. **Compartir** - Muestra tu proyecto a tus amigos o en tu portafolio
+4. **Entender la arquitectura** - Sigue el [Capitulo 10: Arquitectura y Variables de Entorno](./../c10/README.md) para entender como esta organizado todo
 
 ---
 
@@ -578,5 +581,6 @@ Has completado el tutorial de InsightBoard. Ahora tienes:
 - Conocimientos de Django, DRF, PostgreSQL, Docker
 - Experiencia creando APIs REST
 - Experiencia construyendo frontends interactivos
+- Tu proyecto desplegado en la nube
 
 **¡Sigue aprendiendo y construyendo!**

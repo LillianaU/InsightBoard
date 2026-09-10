@@ -20,6 +20,7 @@
 | [C7](./c7/README.md) | **Autenticacion JWT** | Login, registro, tokens, proteccion de rutas | 25 min |
 | [C8](./c8/README.md) | **Probar el proyecto** | Pruebas locales, troubleshooting | 20 min |
 | [C9](./c9/README.md) | **Publicar en Render** | Deploy, variables de entorno, superusuario | 30 min |
+| [C10](./c10/README.md) | **Arquitectura y Variables de Entorno** | Entender la estructura, .env, configuracion | 20 min |
 
 ---
 
