@@ -6,46 +6,38 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def metrics_summary(request):
+def _get_days(request):
     try:
         days = int(request.query_params.get('days', 30))
     except (ValueError, TypeError):
         days = 30
-    return Response(get_summary(days=days))
+    return max(1, min(days, 365))
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def metrics_summary(request):
+    return Response(get_summary(days=_get_days(request)))
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def metrics_timeseries(request):
     event_type = request.query_params.get('event_type')
-    try:
-        days = int(request.query_params.get('days', 30))
-    except (ValueError, TypeError):
-        days = 30
-    return Response(get_timeseries(event_type=event_type, days=days))
+    return Response(get_timeseries(event_type=event_type, days=_get_days(request)))
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def metrics_breakdown(request):
     dimension = request.query_params.get('dimension', 'event_type')
-    try:
-        days = int(request.query_params.get('days', 30))
-    except (ValueError, TypeError):
-        days = 30
-    return Response(get_breakdown(dimension=dimension, days=days))
+    return Response(get_breakdown(dimension=dimension, days=_get_days(request)))
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def metrics_heatmap(request):
-    try:
-        days = int(request.query_params.get('days', 30))
-    except (ValueError, TypeError):
-        days = 30
-    return Response(get_heatmap_data(days=days))
+    return Response(get_heatmap_data(days=_get_days(request)))
 
 
 @api_view(['POST'])

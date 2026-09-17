@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 from .models import Event, DataSource, SavedReport
 
@@ -17,10 +19,14 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventIngestSerializer(serializers.Serializer):
-    source = serializers.CharField()
-    event_type = serializers.CharField()
+    source = serializers.CharField(max_length=100)
+    event_type = serializers.CharField(max_length=50)
     payload = serializers.DictField()
-    user_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_payload(self, value):
+        if len(json.dumps(value)) > 10000:
+            raise serializers.ValidationError('Payload demasiado grande (maximo 10KB)')
+        return value
 
 
 class SavedReportSerializer(serializers.ModelSerializer):

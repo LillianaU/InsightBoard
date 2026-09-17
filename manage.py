@@ -2,7 +2,10 @@ import os
 import sys
 
 if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.development'))
+    os.environ.setdefault(
+        'DJANGO_SETTINGS_MODULE',
+        'config.settings.production' if os.getenv('RENDER') else 'config.settings.development'
+    )
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

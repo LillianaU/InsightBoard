@@ -27,5 +27,9 @@ frontend_urlpatterns = [
     re_path(r'^js/(?P<path>.*)$', static_serve, {'document_root': os.path.join(FRONTEND_DIR, 'js')}),
 ]
 
-if settings.DEBUG:
-    urlpatterns = frontend_urlpatterns + urlpatterns
+urlpatterns = frontend_urlpatterns + urlpatterns
+
+if not settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', static_serve, {'document_root': settings.STATIC_ROOT}),
+    ]

@@ -5,7 +5,6 @@ from django.db import connection
 def health_check(request):
     try:
         connection.ensure_connection()
-        db_status = 'ok'
     except Exception:
-        db_status = 'error'
-    return JsonResponse({'status': 'ok', 'database': db_status})
+        return JsonResponse({'status': 'error', 'database': 'error'}, status=503)
+    return JsonResponse({'status': 'ok', 'database': 'ok'})

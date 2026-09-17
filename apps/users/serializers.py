@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
@@ -36,7 +37,7 @@ class LoginSerializer(serializers.Serializer):
         password = attrs.get('password')
         user = authenticate(email=email, password=password)
         if not user:
-            raise serializers.ValidationError('Credenciales inválidas')
+            raise AuthenticationFailed('Credenciales inválidas')
         refresh = RefreshToken.for_user(user)
         return {
             'refresh': str(refresh),

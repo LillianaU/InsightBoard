@@ -23,6 +23,8 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
+
 EXPOSE 8000
 
-CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["sh", "-c", "uv run python manage.py migrate --noinput && uv run python manage.py collectstatic --noinput && uv run gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"]

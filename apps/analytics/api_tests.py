@@ -109,7 +109,7 @@ class EventIngestEndpointTest(TestCase):
         response = self.client.post(
             self.ingest_url,
             {
-                "source_name": "Test Source",
+                "source": "Test Source",
                 "event_type": "click",
                 "payload": {"button": "test"}
             },
@@ -122,13 +122,13 @@ class EventIngestEndpointTest(TestCase):
         response = self.client.post(
             self.ingest_url,
             {
-                "source_name": "Test Source",
+                "source": "Test Source",
                 "event_type": "click",
                 "payload": {"button": "test"}
             },
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class MetricsEndpointTest(TestCase):

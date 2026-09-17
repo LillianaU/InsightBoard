@@ -120,7 +120,7 @@ class EventCSVIngestView(generics.CreateAPIView):
             return Response({'detail': 'Archivo muy grande (maximo 5MB)'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            decoded = file_obj.read().decode('utf-8')
+            decoded = file_obj.read().decode('utf-8-sig')
         except UnicodeDecodeError:
             return Response({'detail': 'Archivo no es UTF-8 valido'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -151,8 +151,14 @@ class EventCSVIngestView(generics.CreateAPIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def generate_pdf_report(request):
-    days = int(request.query_params.get('days', 30))
+    try:
+        days = int(request.query_params.get('days', 30))
+    except (ValueError, TypeError):
+        days = 30
+    days = max(1, min(days, 365))
     dimension = request.query_params.get('dimension', 'event_type')
+    if dimension not in ('event_type', 'source', 'weekday'):
+        dimension = 'event_type'
     from .services import get_breakdown, get_summary
 
     user = request.user
@@ -225,6 +231,7 @@ def generate_pdf_report(request):
 
     doc.build(elements)
     buffer.seek(0)
+    safe_email = ''.join(c for c in user.email if c.isalnum() or c in '._-@')
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="reporte-{user.email}-{days}d.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="reporte-{safe_email}-{days}d.pdf"'
     return response
