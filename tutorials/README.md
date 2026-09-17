@@ -114,9 +114,49 @@ uv run python manage.py migrate
 uv run python manage.py createsuperuser
 uv run python manage.py runserver   # ejecutar proyecto
 
-docker-compose down -v
+
+1. Detén todo lo que corre:
+
+docker compose down
+2. Borra el volumen problemático del venv (esto arregla el error de permisos):
+
+docker volume rm insightboard_venv_data
+3. Construye y levanta los 4 servicios:
+
+docker compose up -d --build
+(Este up ya "enciende" Todo: Postgres, Redis, la web y Celery.)
+
+4. Aplica migraciones a tu base de datos:
+
+docker compose exec web uv run python manage.py migrate
+
+
+Email: admin@insightboard.com
+Contraseña: admin123
+
+5. Crea el usuario admin (solo la primera vez):
+
+docker compose exec web uv run python manage.py createsuperuser
+6. Verifica que todo esté Up:
+
+docker compose ps
+Debes ver web y celery en estado Up (no Restarting). Luego abre:
+
+Frontend: http://127.0.0.1:8000/login.html
+API docs: http://127.0.0.1:8000/api/docs/
+⚠️ Importante: antes del paso 3, Docker Desktop tiene que estar abierto en tu sistema (icono de la ballena en la bandeja).
+
+Ejecuta los pasos 1→3 y pégame la salida de docker compose ps; te confirmo si quedó corriendo.
+
+docker-compose down -v 
 docker volume rm insightboard_venv_data 2>$null
 docker-compose up -d --build
 docker-compose exec web uv run python manage.py migrate
 docker-compose exec web uv run python manage.py createsuperuser
 ```
+
+ota la diferencia:
+
+docker compose up -d → crea + enciende (lo que necesitas aquí).
+docker compose start → solo enciende contenedores ya creados (por eso falla con "no container found").
+docker compose down → detiene y borra los contenedores.
