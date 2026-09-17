@@ -11,7 +11,7 @@ RUN adduser --disabled-password --gecos '' appuser
 
 WORKDIR /app
 
-COPY --from=ghcr.io/astral-sh/uv:0.5.15 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock ./
 

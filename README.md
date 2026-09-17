@@ -152,7 +152,7 @@ uv pip install -r requirements.txt
 
 # 4. Copia y edita las variables de entorno
 cp .env.example .env
-# Abre .env y编辑a DATABASE_URL con tus datos de PostgreSQL
+# Abre .env y edita DATABASE_URL con tus datos de PostgreSQL
 # Ejemplo: postgres://usuario:contraseña@localhost:5432/insightboard
 
 # 5. Aplica las migraciones
@@ -263,9 +263,9 @@ curl -X POST http://127.0.0.1:8000/api/reports/ \
   -d '{"name":"Reporte de prueba","metric_type":"events_count","dimensions":["source"],"filters":{}}'
 ```
 
-### Pruebas automatizadas (futuro)
+### Pruebas automatizadas
 
-El proyecto actualmente no tiene tests unitarios. Para agregar pruebas:
+El proyecto tiene 24 pruebas automatizadas (modelos y endpoints API):
 
 ```bash
 # Instalar pytest (ya esta en requirements.txt)

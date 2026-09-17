@@ -26,7 +26,7 @@
 
 ## Como usar este libro
 
-1. Lee cada capitulo **en orden** (del C0 al C9)
+1. Lee cada capitulo **en orden** (del C0 al C10)
 2. Haz **cada paso exactamente como se indica**
 3. **Verifica** que funciono antes de pasar al siguiente paso
 4. Si algo falla, revisa la seccion "Solucion de problemas" del capitulo
@@ -102,17 +102,21 @@ InsightBoard/
 
 **Empieza con el [Capitulo 0: Que es InsightBoard](./c0/README.md)**
 
-powershel
+---
+
+## Referencia rapida de comandos
+
+```powershell
 uv venv
 
 uv sync
 uv run python manage.py migrate
 uv run python manage.py createsuperuser
-uv run python manage.py runserver # ejecutar proyecto 
+uv run python manage.py runserver   # ejecutar proyecto
 
-
-docker-compose down -v 
+docker-compose down -v
 docker volume rm insightboard_venv_data 2>$null
 docker-compose up -d --build
 docker-compose exec web uv run python manage.py migrate
 docker-compose exec web uv run python manage.py createsuperuser
+```

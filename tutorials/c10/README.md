@@ -122,8 +122,8 @@ base.py (configuracion base - se usa en todos lados)
      ├── development.py (tu PC local)
      │     └── DEBUG=True, base de datos local
      │
-     └── production.py (Render - internet)
-           └── DEBUG=False, HSTS, SSL, WhiteNoise
+            └── production.py (Render - internet)
+                  └── DEBUG=False, HSTS, SSL, cabeceras de seguridad
 ```
 
 ### `base.py` - Configuracion Base
@@ -147,7 +147,7 @@ Tiene **8 capas de seguridad**:
 from .base import *
 
 DEBUG = True
-# Usa SQLite o PostgreSQL local
+# Usa PostgreSQL local
 # No necesita SSL
 ```
 
