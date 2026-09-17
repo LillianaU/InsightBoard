@@ -55,7 +55,7 @@ Browser (Frontend)  --[JWT]-->  Django REST API  --[psycopg2]-->  PostgreSQL
 ---
 
 ## Estructura final del proyecto
-
+Monolito Modular
 ```
 InsightBoard/
 ├── config/                  # Configuracion de Django
@@ -108,10 +108,10 @@ uv venv
 uv sync
 uv run python manage.py migrate
 uv run python manage.py createsuperuser
-uv run python manage.py runserver
+uv run python manage.py runserver # ejecutar proyecto 
 
 
-docker-compose down -v
+docker-compose down -v 
 docker volume rm insightboard_venv_data 2>$null
 docker-compose up -d --build
 docker-compose exec web uv run python manage.py migrate
