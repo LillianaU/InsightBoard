@@ -3,6 +3,7 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.static import serve as static_serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from apps.core.views import health_check
 import os
 
 urlpatterns = [
@@ -11,6 +12,7 @@ urlpatterns = [
     path('api/events/', include('apps.analytics.urls')),
     path('api/reports/', include('apps.analytics.report_urls')),
     path('api/metrics/', include('apps.analytics.metric_urls')),
+    path('api/health/', health_check, name='api-health'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('', include('apps.core.urls')),
