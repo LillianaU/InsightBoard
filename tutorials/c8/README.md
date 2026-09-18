@@ -337,10 +337,18 @@ curl -X POST http://127.0.0.1:8000/api/events/ingest/ \
 ## Paso 5: Prueba de Swagger
 
 1. Ve a http://127.0.0.1:8000/api/docs/
-2. Haz clic en **"Authorize"** (arriba a la derecha)
-3. Pega tu token: `Bearer TU_TOKEN`
-4. Haz clic en "Authorize"
-5. Prueba varios endpoints haciendo clic en ellos y luego en "Try it out"
+2. Expande **POST `/api/auth/login/`** y haz clic en **"Try it out"**
+3. En **Request body**, escribe las credenciales en JSON:
+   ```json
+   {"email":"admin@insightboard.com","password":"admin123"}
+   ```
+4. Haz clic en **Execute** y copia el valor del campo `access` de la respuesta
+5. Haz clic en **"Authorize"** arriba a la derecha
+6. En el campo `jwtAuth` pega solo el token `access`, sin escribir `Bearer`
+7. Haz clic en **Authorize** y luego en **Close**
+8. Ahora prueba un endpoint protegido, por ejemplo **GET `/api/auth/me/`**, con **"Try it out"**
+
+> No escribas el JSON en la URL. El cuerpo JSON va en **Request body**. El campo `jwtAuth` recibe solamente el token, no el CSRF token ni la palabra `Bearer`.
 
 ---
 
